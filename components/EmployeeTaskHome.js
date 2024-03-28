@@ -1,11 +1,19 @@
 import axios from 'axios'
 import React, { useEffect, useState } from 'react'
-import { Image, ImageBackground, SafeAreaView, StyleSheet, Text, View, TouchableOpacity, ScrollView, Modal, TextInput, Button } from 'react-native'
+import { Image, ImageBackground, SafeAreaView, StyleSheet, Text, View, TouchableOpacity, ScrollView, Modal, TextInput, Button, Dimensions } from 'react-native'
 import DateTimePicker from '@react-native-community/datetimepicker';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import ToastManager, { Toast } from 'toastify-react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LocationModal from './LocationModal';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import { PermissionsAndroid } from 'react-native';
+import Geolocation from '@react-native-community/geolocation';
+
+
+// Get the device's screen dimensions
+const { width, height } = Dimensions.get('window');
+
 
 
 
@@ -32,6 +40,13 @@ const EmployeeTaskHome = () => {
     const [userAttendance, setUserAttendance] = useState(null)
 
     const [checkInOutText, setCheckInOut] = useState('')
+
+    const [mapRegion, setMapRegion] = useState({
+        latitude: 0,
+        longitude: 0,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+    });
 
     const handleTaskComeUnder = (option) => {
         setTaskComesUnder(option)
@@ -326,6 +341,75 @@ const EmployeeTaskHome = () => {
         }
     }, [modalVisible])
 
+    useEffect(() => {
+        if (mapModalVisible === true) {
+            requestLocationPermission()
+        }
+    }, [mapModalVisible])
+
+    // location
+
+    const requestLocationPermission = async () => {
+        try {
+            const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+                {
+                    title: 'Location Permission',
+                    message: 'This app needs access to your location.',
+                    buttonNeutral: 'Ask Me Later',
+                    buttonNegative: 'Cancel',
+                    buttonPositive: 'OK',
+                },
+            );
+            if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                console.log('Location permission granted');
+                getUserLocation()
+                return true;
+            } else {
+                console.log('Location permission denied');
+                return false;
+            }
+        } catch (err) {
+            console.warn(err);
+            return false;
+        }
+    };
+
+    const getUserLocation = () => {
+        Geolocation.getCurrentPosition(
+            position => {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+                console.log('Latitude: ', latitude);
+                console.log('Longitude: ', longitude);
+
+                // Example zoom level (adjust as needed)
+                const zoomLevel = 10;
+
+                // Calculate latitudeDelta and longitudeDelta based on zoom level
+                const latitudeDelta = 0.01 * Math.pow(2, (21 - zoomLevel));
+                const longitudeDelta = 0.01 * Math.pow(2, (21 - zoomLevel)) * (width / height);
+
+                console.log('Latitude Delta: ', latitudeDelta);
+                console.log('Longitude Delta: ', longitudeDelta);
+
+                setMapRegion({
+                    latitude,
+                    longitude,
+                    latitudeDelta,
+                    longitudeDelta,
+                });
+            },
+            error => {
+                console.error(error.code, error.message);
+            },
+            { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
+            // { enableHighAccuracy: true, timeout: 30000 }
+        );
+    };
+
+    console.log('mapRegion', mapRegion)
+
 
     // console.log(taskList)
     // console.log(date, 'date')
@@ -360,6 +444,7 @@ const EmployeeTaskHome = () => {
                     <View style={styles.THUserBanner}>
                         <View><Text style={{ fontWeight: "bold", fontSize: 20, color: "black" }}>{empId && empId}</Text></View>
                         <TouchableOpacity style={styles.button} onPress={() => setMapModalVisible(!mapModalVisible)}>
+                            {/* <TouchableOpacity style={styles.button} onPress={() => requestLocationPermission()}> */}
                             <Image source={require('../images/location.png')} style={{
                                 width: 16,
                                 height: 16,
@@ -734,13 +819,21 @@ const EmployeeTaskHome = () => {
                     animationType="slide"
                     transparent={true}
                     visible={mapModalVisible}
-                    onRequestClose={() => setModalVisible(false)}
+                    onRequestClose={() => setMapModalVisible(false)}
                 >
 
                     <View style={styles.modalContainer}>
                         <View style={styles.modalContent}>
-                            <View>
-                                <Text>Map</Text>
+                            <View style={styles.mapCont}>
+                                {mapRegion.latitude !== 0 && (
+                                    <MapView style={styles.map} region={mapRegion} provider={PROVIDER_GOOGLE}>
+                                        <Marker coordinate={mapRegion} />
+                                    </MapView>
+                                )}
+                                {/* <MapView style={styles.map} region={mapRegion}>
+
+                                    <Marker coordinate={mapRegion} />
+                                </MapView> */}
                             </View>
                             <View style={{
                                 flexDirection: 'row',
@@ -968,6 +1061,20 @@ const styles = StyleSheet.create({
         alignItems: 'flex-start',
         width: '100%',
         marginBottom: 12
+    },
+    mapCont: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'green',
+        height: 500,
+        width: '100%'
+    },
+    map: {
+        // width: '100%',
+        // height: 450,
+        ...StyleSheet.absoluteFillObject,
+        // width: Dimensions.get('window').width,
+        // height: Dimensions.get('window').height
     }
 })
 
