@@ -5,32 +5,76 @@ import footerBg from '../images/footer_bg.png'
 import cloud from '../images/cloud_svg.png'
 import cbxLogo from '../images/cbxLogo.png'
 import axios from 'axios';
+import { useNavigation } from '@react-navigation/native';
+import ToastManager, { Toast } from 'toastify-react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Login = () => {
 
     const [userId, setUserId] = useState('');
     const [password, setPassword] = useState('');
 
+    const navigation = useNavigation()
+
+    const showLoginSuccessToast = () => {
+        Toast.success(`wlecome, ${userId}`)
+    }
+
+    const showLoginFailedToast = () => {
+        Toast.error('Incorrect userId or passowrd')
+    }
+
+    const showFormEmptyToast = () => {
+        Toast.error('UserId and Password cant be empty')
+    }
+
     const handleLogin = async () => {
         // Here you can implement your login logic
         console.log('UserId:', userId);
         console.log('Password:', password);
 
-        try {
-            const response = await axios.get(`https://cubixweberp.com:156/api/EmpLogin/EmpLogin`, {
-                params: {
-                    cmpcode: 'CPAYS',
-                    guid: '425cc3d5-8e70-4502-a3a2-dc85e4bfbd83',
-                    empid: userId,
-                    pass: password
+        setUserId('')
+        setPassword('')
+
+        if (userId !== '' && password !== '') {
+            try {
+                const response = await axios.get(`https://cubixweberp.com:156/api/EmpLogin/EmpLogin`, {
+                    params: {
+                        cmpcode: 'CPAYS',
+                        guid: '425cc3d5-8e70-4502-a3a2-dc85e4bfbd83',
+                        empid: userId,
+                        pass: password
+                    }
+                });
+                console.log('API response:', response.data);
+                if (response.data.length > 0 && userId.toLowerCase() == response.data[0].empid.toLowerCase()) {
+                    console.log('inside success route')
+                    showLoginSuccessToast()
+                    navigation.navigate('EmployeeHome')
+
+                    const userData = {
+                        Division: response.data[0].Division,
+                        Name: response.data[0].Name,
+                        empid: response.data[0].empid,
+                        jobtitle: response.data[0].jobtitle,
+                        onlineallow: response.data[0].onlineallow,
+                        photo: response.data[0].photo
+                    };
+
+                    await AsyncStorage.setItem('userData', JSON.stringify(userData));
+
+                } else if (response.data.length == 0) {
+                    showLoginFailedToast()
                 }
-            });
-            console.log('API response:', response.data);
-            // Handle API response here (e.g., redirect to dashboard on successful login)
-        } catch (error) {
-            console.error('Error:', error);
-            // Handle error (e.g., display error message to the user)
+                // Handle API response here (e.g., redirect to dashboard on successful login)
+            } catch (error) {
+                console.error('Error:', error);
+                // Handle error (e.g., display error message to the user)
+            }
+        } else {
+            showFormEmptyToast()
         }
+
     };
 
     return (
@@ -42,6 +86,8 @@ const Login = () => {
                 style={styles.container}
             >
                 <View style={styles.LoginWrapper}>
+
+                    <ToastManager width={350} height={100} textStyle={{ fontSize: 17 }} />
 
                     {/* cloudImg */}
                     <View>

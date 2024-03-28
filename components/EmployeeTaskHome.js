@@ -4,6 +4,8 @@ import { Image, ImageBackground, SafeAreaView, StyleSheet, Text, View, Touchable
 import DateTimePicker from '@react-native-community/datetimepicker';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import ToastManager, { Toast } from 'toastify-react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import LocationModal from './LocationModal';
 
 
 
@@ -16,10 +18,20 @@ const EmployeeTaskHome = () => {
 
     const [modalVisible, setModalVisible] = useState(false);
 
+    const [mapModalVisible, setMapModalVisible] = useState(false)
+
     const [taskname, setTaskName] = useState('');
     const [taskDescription, setTaskDescription] = useState('');
 
     const [taskComesUnder, setTaskComesUnder] = useState(null)
+
+    const [userData, setUserData] = useState(null)
+
+    const [empId, setEmpId] = useState('')
+
+    const [userAttendance, setUserAttendance] = useState(null)
+
+    const [checkInOutText, setCheckInOut] = useState('')
 
     const handleTaskComeUnder = (option) => {
         setTaskComesUnder(option)
@@ -53,10 +65,70 @@ const EmployeeTaskHome = () => {
         }
     };
 
-    useEffect(() => {
+    const fetchUserAttendance = async () => {
+        try {
+            const response = await axios.get(`https://cubixweberp.com:156/api/CRMAttendanceList/CPAYS/${empId}`);
+            setUserAttendance(response.data);
+        } catch (error) {
+            console.log(error, 'getTaskListError')
+        }
+    }
 
+    useEffect(() => {
+        const currentDate = new Date();
+        const currentDateString = currentDate.toISOString().slice(0, 10); // Get the date part of the ISO string
+
+        if (userAttendance && userAttendance.length > 0) {
+            // Check if the punch_time is from today
+            const punchTime = new Date(userAttendance[0].punch_time);
+            const punchTimeString = punchTime.toISOString().slice(0, 10); // Get the date part of the ISO string
+
+            if (punchTimeString === currentDateString) {
+                console.log('Punch time is from today');
+                setCheckInOut('CHECKOUT');
+                // Update UI or perform actions accordingly
+            } else {
+                console.log('Punch time is not from today');
+                setCheckInOut('CHECKIN');
+            }
+        }
+    }, [userAttendance]); // Run this effect whenever userAttendance changes
+
+
+    useEffect(() => {
         fetchData();
     }, [])
+
+    useEffect(() => {
+        if (empId) {
+            fetchUserAttendance()
+        }
+    }, [empId])
+
+    const showUserDataToast = (userData) => {
+        if (userData && userData.empid) {
+            Toast.success(`Welcome ${userData.empid}`);
+        }
+    }
+
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const userDataJson = await AsyncStorage.getItem('userData');
+                const userData = JSON.parse(userDataJson);
+                // Now you have userData, you can use it here
+                setUserData(userData)
+                setEmpId(userData.empid)
+                console.log(userData, 'userData')
+                showUserDataToast(userData)
+
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
+        };
+        fetchUserData();
+    }, []);
 
     const showTaskSaveToast = () => {
         Toast.success('Task Added Successfully')
@@ -69,7 +141,6 @@ const EmployeeTaskHome = () => {
     const ErrorAddTask = () => {
         Toast.error('Some Error Occured')
     }
-
 
     const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
     const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
@@ -211,8 +282,8 @@ const EmployeeTaskHome = () => {
                         "latest_stage": "",
                         "latest_stage_code": "",
                         "created_on": createdOn,
-                        "task_creator_name": "AJMAL",
-                        "task_creator_id": "AJMAL"
+                        "task_creator_name": empId,
+                        "task_creator_id": empId
                     }
                 ]);
 
@@ -259,6 +330,8 @@ const EmployeeTaskHome = () => {
     // console.log(taskList)
     // console.log(date, 'date')
     // console.log(time, 'time')
+
+    console.log('empId', empId)
     return (
         <SafeAreaView style={styles.container}>
             <ToastManager />
@@ -285,13 +358,13 @@ const EmployeeTaskHome = () => {
                     // paddingHorizontal: 0
                 }}>
                     <View style={styles.THUserBanner}>
-                        <View><Text style={{ fontWeight: "bold", fontSize: 20, color: "black" }}>AJMAL</Text></View>
-                        <TouchableOpacity style={styles.button}>
+                        <View><Text style={{ fontWeight: "bold", fontSize: 20, color: "black" }}>{empId && empId}</Text></View>
+                        <TouchableOpacity style={styles.button} onPress={() => setMapModalVisible(!mapModalVisible)}>
                             <Image source={require('../images/location.png')} style={{
                                 width: 16,
                                 height: 16,
                             }}></Image>
-                            <Text style={styles.buttonText}>CHECKOUT</Text>
+                            <Text style={styles.buttonText}>{checkInOutText}</Text>
                         </TouchableOpacity>
                     </View>
                 </ImageBackground>
@@ -655,6 +728,105 @@ const EmployeeTaskHome = () => {
                         </View>
                     </View>
                 </Modal>
+
+                {/* MapModal */}
+                <Modal
+                    animationType="slide"
+                    transparent={true}
+                    visible={mapModalVisible}
+                    onRequestClose={() => setModalVisible(false)}
+                >
+
+                    <View style={styles.modalContainer}>
+                        <View style={styles.modalContent}>
+                            <View>
+                                <Text>Map</Text>
+                            </View>
+                            <View style={{
+                                flexDirection: 'row',
+                                justifyContent: "center",
+                                alignItems: "center",
+                                padding: 8, backgroundColor: '#e3e3e3',
+                                margin: 4,
+                                borderRadius: 4
+                            }}>
+                                <Image source={require('../images/refresh.png')} style={{
+                                    width: 16,
+                                    height: 16,
+                                }}></Image>
+                                <Text style={{
+                                    marginLeft: 6,
+                                    fontSize: 18,
+                                    color: 'black'
+                                }}>Refresh Location</Text>
+                            </View>
+                            <View style={{
+                                flexDirection: 'row',
+                                justifyContent: "center",
+                                alignItems: "center",
+                                padding: 8, backgroundColor: '#e3e3e3',
+                                margin: 4,
+                                borderRadius: 4
+                            }}>
+                                <Image source={require('../images/globeLoc.png')} style={{
+                                    width: 16,
+                                    height: 16,
+                                }}></Image>
+                                <Text style={{
+                                    marginLeft: 6,
+                                    fontSize: 18,
+                                    color: 'black'
+                                }}>View my location</Text>
+                            </View>
+                            <View style={{
+                                justifyContent: 'flex-end',
+                                flexDirection: "row",
+                                width: '100%',
+                                borderTopColor: 'black',
+                                borderTopWidth: 1
+                                // backgroundColor: 'black'
+                            }}>
+
+                                <View style={{
+                                    margin: 4,
+                                    backgroundColor: 'red',
+                                    color: 'white',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    borderRadius: 4,
+                                    paddingHorizontal: 4
+                                }}>
+                                    <TouchableOpacity onPress={() => setMapModalVisible(false)} style={{
+                                        margin: 4,
+                                        backgroundColor: 'red',
+                                        color: 'white'
+                                    }}>
+                                        <Text style={styles.closeModalButton}>Cancel</Text>
+                                    </TouchableOpacity>
+                                </View>
+                                <View style={{
+                                    margin: 4,
+                                    backgroundColor: 'green',
+                                    color: 'white',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    borderRadius: 4,
+                                    paddingHorizontal: 4
+                                }}>
+                                    <TouchableOpacity onPress={() => saveTask()} style={{
+                                        margin: 4,
+                                        color: 'white'
+                                    }}>
+                                        <Text style={styles.closeModalButton}>Submit</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </View>
+                    </View>
+
+                </Modal>
+
+                {/* <LocationModal mapModalVisible={mapModalVisible} /> */}
             </View>
         </SafeAreaView>
     )

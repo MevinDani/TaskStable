@@ -10,5 +10,6 @@ import TaskManagerHome from './components/TaskManagerHome';
 import TaskDetails from './components/TaskDetails';
 import Login from './components/Login';
 import EmployeeTaskHome from './components/EmployeeTaskHome';
+import MainApp from './MainApp';
 
-AppRegistry.registerComponent(appName, () => EmployeeTaskHome);
+AppRegistry.registerComponent(appName, () => MainApp);
