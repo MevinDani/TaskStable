@@ -826,14 +826,13 @@ const EmployeeTaskHome = () => {
                         <View style={styles.modalContent}>
                             <View style={styles.mapCont}>
                                 {mapRegion.latitude !== 0 && (
-                                    <MapView style={styles.map} region={mapRegion} provider={PROVIDER_GOOGLE}>
-                                        <Marker coordinate={mapRegion} />
-                                    </MapView>
+                                    <>
+                                        <MapView style={styles.map} region={mapRegion} provider={PROVIDER_GOOGLE}>
+                                            <Marker coordinate={mapRegion} />
+                                        </MapView>
+                                        <Text>Test</Text>
+                                    </>
                                 )}
-                                {/* <MapView style={styles.map} region={mapRegion}>
-
-                                    <Marker coordinate={mapRegion} />
-                                </MapView> */}
                             </View>
                             <View style={{
                                 flexDirection: 'row',
@@ -1016,10 +1015,10 @@ const styles = StyleSheet.create({
     },
     modalContent: {
         backgroundColor: '#F7F7F7',
-        padding: 20,
+        padding: 15,
         borderRadius: 10,
         alignItems: 'center',
-        width: '90%'
+        width: '94%'
     },
     closeModalButton: {
         marginTop: 10,
@@ -1067,14 +1066,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: 'green',
         height: 500,
-        width: '100%'
+        width: '100%',
     },
     map: {
+        // width: '100%',
+        // height: '100%'
         // width: '100%',
         // height: 450,
         ...StyleSheet.absoluteFillObject,
         // width: Dimensions.get('window').width,
-        // height: Dimensions.get('window').height
+        // height: Dimensions.get('window').height,
     }
 })
 

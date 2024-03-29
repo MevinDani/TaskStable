@@ -11,5 +11,6 @@ import TaskDetails from './components/TaskDetails';
 import Login from './components/Login';
 import EmployeeTaskHome from './components/EmployeeTaskHome';
 import MainApp from './MainApp';
+import LocationModal from './components/LocationModal';
 
 AppRegistry.registerComponent(appName, () => MainApp);
