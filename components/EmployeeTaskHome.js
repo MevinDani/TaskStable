@@ -9,6 +9,8 @@ import LocationModal from './LocationModal';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { PermissionsAndroid } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
+import { Linking } from 'react-native';
+import { Alert } from 'react-native';
 
 
 // Get the device's screen dimensions
@@ -72,9 +74,22 @@ const EmployeeTaskHome = () => {
 
     const fetchData = async () => {
         try {
-            const response = await axios.get('https://cubixweberp.com:156/api/CRMTaskMainList/CPAYS/all/-/-/-/-/-/2024-01-10/2024-03-28/-');
+            const response = await axios.get(`https://cubixweberp.com:156/api/CRMTaskMainList/CPAYS/owner/${empId}/-/-/-/-/2024-01-10/2024-03-28/-`);
+            // const response = await axios.get(`https://cubixweberp.com:156/api/CRMTaskMainList/CPAYS/owner/AJMAL/-/-/-/-/2024-01-10/2024-03-28/-`);
             setTaskList(response.data);
             console.log('fetchData')
+        } catch (error) {
+            console.log(error, 'getTaskListError')
+        }
+    };
+
+    const fetchDataNew = async () => {
+        try {
+            const response = await axios.get(`https://cubixweberp.com:156/api/CRMTaskMainList/CPAYS/owner/${empId}/-/-/-/-/2024-01-10/2024-03-28/-`);
+            // const response = await axios.get(`https://cubixweberp.com:156/api/CRMTaskMainList/CPAYS/owner/AJMAL/-/-/-/-/2024-01-10/2024-03-28/-`);
+            setTaskList(response.data);
+            showTaskSaveToast()
+            console.log('fetchDataNew')
         } catch (error) {
             console.log(error, 'getTaskListError')
         }
@@ -111,8 +126,8 @@ const EmployeeTaskHome = () => {
 
 
     useEffect(() => {
-        fetchData();
-    }, [])
+        if (empId) fetchData();
+    }, [empId])
 
     useEffect(() => {
         if (empId) {
@@ -241,7 +256,7 @@ const EmployeeTaskHome = () => {
     }, [date, time])
 
     const getPriorityColor = priority => {
-        switch (priority.toLowerCase()) {
+        switch (priority?.toLowerCase()) {
             case 'high':
                 return '#870404';
             case 'moderate':
@@ -276,7 +291,7 @@ const EmployeeTaskHome = () => {
 
                 const createdOn = getCurrentDateTime();
 
-                const response = await axios.post('https://cubixweberp.com:156/api/CRMTaskMain', [
+                const requestData = [
                     {
                         "cmpcode": "CPAYS",
                         "mode": "ENTRY",
@@ -287,11 +302,11 @@ const EmployeeTaskHome = () => {
                         "job_code": "",
                         "priority": priorityLevel,
                         "task_scheduledon": combinedDateTime,
-                        "task_owner_id": "AJMAL",
-                        "task_ownder_name": "AJMAL",
+                        "task_owner_id": empId,
+                        "task_ownder_name": empId,
                         "task_ownder_dept": "",
                         "task_comes_under": taskComesUnder,
-                        "task_type": "Inhouse",
+                        "task_type": taskType,
                         "latest_status": "",
                         "latest_status_code": "",
                         "latest_stage": "",
@@ -300,12 +315,44 @@ const EmployeeTaskHome = () => {
                         "task_creator_name": empId,
                         "task_creator_id": empId
                     }
-                ]);
+                ];
+
+                console.log('Request Data:', requestData);
+
+                const response = await axios.post('https://cubixweberp.com:156/api/CRMTaskMain', requestData);
+
+                console.log('Response:', response.data);
+
+                // const response = await axios.post('https://cubixweberp.com:156/api/CRMTaskMain', [
+                //     {
+                //         "cmpcode": "CPAYS",
+                //         "mode": "ENTRY",
+                //         "task_id": "DE9ECBC2-F1DF-40F1-BC67-4BD3087978BD",
+                //         "task_name": taskname,
+                //         "task_description": taskDescription,
+                //         "include_travel": includeTravel,
+                //         "job_code": "",
+                //         "priority": priorityLevel,
+                //         "task_scheduledon": combinedDateTime,
+                //         "task_owner_id": "AJMAL",
+                //         "task_ownder_name": "AJMAL",
+                //         "task_ownder_dept": "",
+                //         "task_comes_under": taskComesUnder,
+                //         "task_type": taskType,
+                //         "latest_status": "",
+                //         "latest_status_code": "",
+                //         "latest_stage": "",
+                //         "latest_stage_code": "",
+                //         "created_on": createdOn,
+                //         "task_creator_name": empId,
+                //         "task_creator_id": empId
+                //     }
+                // ]);
 
                 // Assuming a successful response has status code 200
                 if (response.status === 200) {
                     showTaskSaveToast()
-                    fetchData()
+                    fetchDataNew()
                     // Task saved successfully, handle any further actions here
                     console.log('Task saved successfully');
                     console.log(response.data)
@@ -338,6 +385,8 @@ const EmployeeTaskHome = () => {
             setIncludeTravel(null)
             setPriorityLevel(null)
             setCombinedDateTime('')
+            setDate('')
+            setTime('')
         }
     }, [modalVisible])
 
@@ -402,16 +451,32 @@ const EmployeeTaskHome = () => {
             },
             error => {
                 console.error(error.code, error.message);
+                promptEnableLocationServices();
             },
             { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
             // { enableHighAccuracy: true, timeout: 30000 }
         );
     };
 
+    const promptEnableLocationServices = () => {
+        Alert.alert(
+            'Location Services Disabled',
+            'Please enable location services on your device to use this feature.',
+            [
+                { text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel' },
+            ],
+            { cancelable: false }
+        );
+    };
+
+    const openLocationSettings = () => {
+        Linking.openSettings();
+    };
+
     console.log('mapRegion', mapRegion)
 
 
-    // console.log(taskList)
+    console.log(taskList)
     // console.log(date, 'date')
     // console.log(time, 'time')
 
@@ -485,8 +550,8 @@ const EmployeeTaskHome = () => {
 
                             {/* Table Data */}
                             {
-                                taskList?.map((task, index) => (
-                                    <View style={styles.tableRow} key={index}>
+                                taskList && taskList?.map((task, index) => (
+                                    <TouchableOpacity style={styles.tableRow} key={index} onPress={() => console.log(task)}>
                                         <Text style={styles.dataCell}>{task.task_name}</Text>
                                         <Text style={styles.dataCell}>{task.task_description}</Text>
                                         <Text style={styles.dataCell}>{task.task_scheduledon}</Text>
@@ -494,7 +559,7 @@ const EmployeeTaskHome = () => {
                                         <Text style={[styles.dataCell, { backgroundColor: getPriorityColor(task.priority), color: getTextColor(task.priority) }]}>
                                             {task.priority}
                                         </Text>
-                                    </View>
+                                    </TouchableOpacity>
                                 ))
                             }
 
