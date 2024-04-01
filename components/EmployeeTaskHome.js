@@ -11,6 +11,7 @@ import { PermissionsAndroid } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
 import { Linking } from 'react-native';
 import { Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
 
 // Get the device's screen dimensions
@@ -49,6 +50,8 @@ const EmployeeTaskHome = () => {
         latitudeDelta: 0.0922,
         longitudeDelta: 0.0421,
     });
+
+    const navigation = useNavigation()
 
     const handleTaskComeUnder = (option) => {
         setTaskComesUnder(option)
@@ -116,7 +119,44 @@ const EmployeeTaskHome = () => {
             if (punchTimeString === currentDateString) {
                 console.log('Punch time is from today');
                 setCheckInOut('CHECKOUT');
+                const latitude = userAttendance && parseFloat(userAttendance[0].latitude);
+                const longitude = userAttendance && parseFloat(userAttendance[0].longitude);
+
+
+                const fetchUserData = async () => {
+                    try {
+                        let userDataJson = await AsyncStorage.getItem('userData');
+                        let userData = JSON.parse(userDataJson) || {};
+
+                        // const latitude = mapRegion && mapRegion.latitude
+                        // const longitude = mapRegion && mapRegion.longitude
+
+                        // Add latitude and longitude to userData
+                        userData.latitude = latitude;
+                        userData.longitude = longitude;
+
+                        // Update state with modified userData
+                        setUserData(userData);
+                        setEmpId(userData.empid);
+
+                        // Store updated userData back to AsyncStorage
+                        await AsyncStorage.setItem('userData', JSON.stringify(userData));
+
+                        console.log(userData, 'userData');
+                        // showUserDataToast(userData);
+
+                    } catch (error) {
+                        console.error('Error fetching user data:', error);
+                    }
+                };
+
+                fetchUserData();
                 // Update UI or perform actions accordingly
+                setMapRegion(prevRegion => ({
+                    ...prevRegion,
+                    latitude,
+                    longitude
+                }));
             } else {
                 console.log('Punch time is not from today');
                 setCheckInOut('CHECKIN');
@@ -124,6 +164,43 @@ const EmployeeTaskHome = () => {
         }
     }, [userAttendance]); // Run this effect whenever userAttendance changes
 
+    console.log('userAttendance', userAttendance)
+
+    // useEffect(() => {
+    //     if (mapRegion.latitude !== 0) {
+    //         const fetchUserData = async () => {
+    //             try {
+    //                 let userDataJson = await AsyncStorage.getItem('userData');
+    //                 let userData = JSON.parse(userDataJson) || {};
+
+    //                 const latitude = mapRegion && mapRegion.latitude
+    //                 const longitude = mapRegion && mapRegion.longitude
+
+    //                 // Add latitude and longitude to userData
+    //                 userData.latitude = latitude;
+    //                 userData.longitude = longitude;
+
+    //                 // Update state with modified userData
+    //                 setUserData(userData);
+    //                 setEmpId(userData.empid);
+
+    //                 // Store updated userData back to AsyncStorage
+    //                 await AsyncStorage.setItem('userData', JSON.stringify(userData));
+
+    //                 console.log(userData, 'userData');
+    //                 // showUserDataToast(userData);
+
+    //             } catch (error) {
+    //                 console.error('Error fetching user data:', error);
+    //             }
+    //         };
+
+    //         fetchUserData();
+    //     }
+    // }, [mapRegion])
+
+    console.log(userAttendance)
+    console.log(mapRegion)
 
     useEffect(() => {
         if (empId) fetchData();
@@ -159,6 +236,8 @@ const EmployeeTaskHome = () => {
         };
         fetchUserData();
     }, []);
+
+    console.log(userData)
 
     const showTaskSaveToast = () => {
         Toast.success('Task Added Successfully')
@@ -396,6 +475,16 @@ const EmployeeTaskHome = () => {
         }
     }, [mapModalVisible])
 
+    // tasklistclick
+
+    const gotoTaskDetail = (task) => {
+        navigation.navigate('TaskDetails', {
+            task_id: task.task_id,
+            created_on: task.created_on,
+            task_scheduledon: task.task_scheduledon
+        });
+    };
+
     // location
 
     const requestLocationPermission = async () => {
@@ -476,7 +565,7 @@ const EmployeeTaskHome = () => {
     console.log('mapRegion', mapRegion)
 
 
-    console.log(taskList)
+    // console.log(taskList)
     // console.log(date, 'date')
     // console.log(time, 'time')
 
@@ -551,7 +640,7 @@ const EmployeeTaskHome = () => {
                             {/* Table Data */}
                             {
                                 taskList && taskList?.map((task, index) => (
-                                    <TouchableOpacity style={styles.tableRow} key={index} onPress={() => console.log(task)}>
+                                    <TouchableOpacity style={styles.tableRow} key={index} onPress={() => gotoTaskDetail(task)}>
                                         <Text style={styles.dataCell}>{task.task_name}</Text>
                                         <Text style={styles.dataCell}>{task.task_description}</Text>
                                         <Text style={styles.dataCell}>{task.task_scheduledon}</Text>

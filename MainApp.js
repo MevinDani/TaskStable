@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import Login from './components/Login';
 import EmployeeTaskHome from './components/EmployeeTaskHome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import TaskDetails from './components/TaskDetails';
 
 
 const Stack = createNativeStackNavigator();
@@ -32,6 +33,7 @@ const MainApp = () => {
                     <Stack.Screen name='Login' component={Login} options={{ headerShown: false }} />
                 ) : null}
                 <Stack.Screen name='EmployeeHome' component={EmployeeTaskHome} options={{ headerShown: false }} />
+                <Stack.Screen name='TaskDetails' component={TaskDetails} options={{ headerShown: false }} />
             </Stack.Navigator>
         </NavigationContainer>
     )

@@ -1,9 +1,161 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { SafeAreaView, View, Text, StyleSheet, Image, TouchableOpacity, ImageBackground, TextInput, ScrollView } from 'react-native'
 import userAvt from '../images/userAvt.png'
-
+import { useRoute } from '@react-navigation/native'
+import axios from 'axios'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 const TaskDetails = () => {
+    const route = useRoute()
+    const { task_id, created_on, task_scheduledon } = route.params;
+    const createdDate = created_on.split('T')[0]; // Extract date part
+    const scheduledDate = task_scheduledon.split('T')[0]; // Extract date part
+
+    const [userData, setUserData] = useState(null)
+
+    const [taskData, setTaskData] = useState(null)
+    const [taskHistory, setTaskHistory] = useState(null)
+    const [allStatusList, setAllStatusList] = useState(null)
+    const [statusArray, setStatusArray] = useState([])
+
+    const [statusDescription, setStatusDescription] = useState('')
+    const [fileDescription, setFileDescription] = useState('')
+
+    const initStatus = ['ESCALATED', 'ACCEPTED_OPEN', 'ACCEPTED_ON_HOLD']
+    const travelStart = ['TRAVEL_START']
+    const travelStop = ['TRAVEL_END']
+    const taskStart = ['TASK_START']
+    const taskStop = ['TASK_END']
+    const lastStatus = ['CUSTOMER_REJECTION', 'COMPLETED', 'BEYOND THE SCOPE']
+
+    const [selectedStatus, setSelectedStatus] = useState(null);
+
+    const handleStatusClick = (item) => {
+        setSelectedStatus(item === selectedStatus ? null : item);
+    };
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const userDataJson = await AsyncStorage.getItem('userData');
+                const userData = JSON.parse(userDataJson);
+                // Now you have userData, you can use it here
+                setUserData(userData)
+                console.log(userData, 'userData')
+
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
+        };
+        fetchUserData();
+    }, []);
+
+    useEffect(() => {
+        const fetchTaskData = async () => {
+            if (task_id) {
+                try {
+                    const response = await axios.get(`https://cubixweberp.com:156/api/CRMTaskMainList/CPAYS/single/-/-/-/${task_id}/-/${createdDate}/${scheduledDate}/-`);
+                    const data = response.data;
+                    setTaskData(data)
+
+                } catch (error) {
+                    console.error('Error fetching data:', error);
+                }
+            }
+        };
+
+        fetchTaskData();
+    }, [task_id])
+
+    useEffect(() => {
+        const fetchHistoryData = async () => {
+            if (task_id) {
+                try {
+                    const response = await axios.get(`https://cubixweberp.com:156/api/CRMTAskHistoryList/cpays/all/-/${task_id}/`);
+                    const data = response.data;
+                    setTaskHistory(data)
+
+                } catch (error) {
+                    console.error('Error fetching data:', error);
+                }
+            }
+        };
+
+        fetchHistoryData();
+    }, [task_id])
+
+    useEffect(() => {
+        const fetchStatusListAll = async () => {
+            try {
+                const response = await axios.get(`https://cubixweberp.com:156/api/CRMTAskStageList/CPAYS/all/-`);
+                const data = response.data;
+                setAllStatusList(data)
+
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+        fetchStatusListAll()
+    }, [])
+
+    useEffect(() => {
+        if (taskHistory) {
+            if (taskHistory.length == 0) {
+                setStatusArray(initStatus)
+            }
+        }
+    }, [taskHistory])
+
+    // taskstatusSave
+    const taskStatusSave = async () => {
+
+        const statusCode = allStatusList.find((item) => item.code_name === selectedStatus)?.code_value;
+
+        let reqData = [
+            {
+                cmpcode: "CPAYS",
+                created_on: created_on.replace("T", " "),
+                latitude: userData && userData.latitude.toString(),
+                longitude: userData && userData.longitude.toString(),
+                mode: "ENTRY",
+                name_of_file_uploaded: "",
+                task_id: task_id,
+                task_ownder_id: userData && userData.empid,
+                task_ownder_name: userData && userData.Name,
+                task_scheduledon: task_scheduledon,
+                task_stage: '',
+                task_stage_code: '0',
+                task_stage_description: statusDescription,
+                task_status: selectedStatus,
+                task_status_code: statusCode,
+                task_status_description: statusDescription,
+            }
+        ]
+
+        let stringifiedJson = JSON.stringify(reqData)
+
+        console.log(stringifiedJson)
+        try {
+            await axios.post(`https://cubixweberp.com:156/api/CRMTaskHistory`, stringifiedJson, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then((res) => {
+                console.log(res, 'taskSave')
+            })
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    }
+
+    // console.log(taskData)
+    // console.log(taskHistory)
+
+    // console.log(allStatusList)
+
+    console.log(statusArray)
+
+    // console.log(task_id, created_on, task_scheduledon)
     return (
         <SafeAreaView style={styles.container}>
 
@@ -36,7 +188,8 @@ const TaskDetails = () => {
                         width: "100%",
                         justifyContent: 'flex-start',
                         margin: 8,
-                        padding: 4
+                        padding: 4,
+                        backgroundColor: 'white'
                     }}>
                         <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Task Details</Text>
                     </View>
@@ -45,27 +198,30 @@ const TaskDetails = () => {
                         width: "100%",
                         justifyContent: 'flex-start',
                         margin: 8,
-                        padding: 4
+                        padding: 4,
+                        backgroundColor: 'white'
                     }}>
                         <Text style={{ fontSize: 16, color: 'grey' }}>task name</Text>
-                        <Text style={{ fontSize: 16, color: 'black' }}>new task</Text>
+                        <Text style={{ fontSize: 16, color: 'black' }}>{taskData ? taskData[0].task_name : ''}</Text>
                     </View>
 
                     <View style={{
                         width: "100%",
                         justifyContent: 'flex-start',
                         margin: 8,
-                        padding: 4
+                        padding: 4,
+                        backgroundColor: 'white'
                     }}>
                         <Text style={{ fontSize: 16, color: 'grey' }}>task description</Text>
-                        <Text style={{ fontSize: 16, color: 'black' }}>new task</Text>
+                        <Text style={{ fontSize: 16, color: 'black' }}>{taskData ? taskData[0].task_description : ''}</Text>
 
                     </View>
 
                     <View style={{
                         flexDirection: 'row',
                         justifyContent: 'space-between',
-                        flexWrap: 'wrap'
+                        flexWrap: 'wrap',
+                        backgroundColor: 'white'
                     }}>
 
                         <View style={{
@@ -88,7 +244,7 @@ const TaskDetails = () => {
 
                         }}>
                             <Text style={{ fontSize: 16, color: 'grey' }}>travel included</Text>
-                            <Text style={{ fontSize: 16, color: 'black' }}>yes</Text>
+                            <Text style={{ fontSize: 16, color: 'black' }}>{taskData ? taskData[0].include_travel : ''}</Text>
                         </View>
                         <View style={{
                             width: '48%',
@@ -109,7 +265,7 @@ const TaskDetails = () => {
                             elevation: 1,
                         }}>
                             <Text style={{ fontSize: 16, color: 'grey' }}>priority</Text>
-                            <Text style={{ fontSize: 16, color: 'black' }}>Moderate</Text>
+                            <Text style={{ fontSize: 16, color: 'black' }}>{taskData ? taskData[0].priority : ''}</Text>
                         </View>
                         <View style={{
                             width: '48%',
@@ -130,7 +286,7 @@ const TaskDetails = () => {
                             elevation: 1,
                         }}>
                             <Text style={{ fontSize: 16, color: 'grey' }}>task start date</Text>
-                            <Text style={{ fontSize: 16, color: 'black' }}>Mar 30 2024 09:00 AM</Text>
+                            <Text style={{ fontSize: 16, color: 'black' }}>{scheduledDate}</Text>
                         </View>
                         <View style={{
                             width: '48%',
@@ -151,7 +307,7 @@ const TaskDetails = () => {
                             elevation: 1,
                         }}>
                             <Text style={{ fontSize: 16, color: 'grey' }}>task assigned to</Text>
-                            <Text style={{ fontSize: 16, color: 'black' }}>AJMAL</Text>
+                            <Text style={{ fontSize: 16, color: 'black' }}>{taskData ? taskData[0].task_owner_name : ''}</Text>
                         </View>
                         <View style={{
                             width: '48%',
@@ -173,7 +329,7 @@ const TaskDetails = () => {
 
                         }}>
                             <Text style={{ fontSize: 16, color: 'grey' }}>task type</Text>
-                            <Text style={{ fontSize: 16, color: 'black' }}>inhouse</Text>
+                            <Text style={{ fontSize: 16, color: 'black' }}>{taskData ? taskData[0].task_type : ''}</Text>
                         </View>
                     </View>
 
@@ -196,35 +352,28 @@ const TaskDetails = () => {
                             width: '100%',
                             flexDirection: 'row'
                         }}>
-                            <View style={{
-                                backgroundColor: '#F1F1F1',
-                                padding: 8,
-                                margin: 4
-                            }}>
-                                <Text style={{
-                                    color: 'black'
-                                }}>ESCALATED</Text>
-                            </View>
+                            {/* {
+                                taskHistory?.length == 0 &&
+                                <> */}
 
-                            <View style={{
-                                backgroundColor: '#F1F1F1',
-                                padding: 8,
-                                margin: 4
-                            }}>
-                                <Text style={{
-                                    color: 'black'
-                                }}>ACCEPTED_OPEN</Text>
-                            </View>
-
-                            <View style={{
-                                backgroundColor: '#F1F1F1',
-                                padding: 8,
-                                margin: 4
-                            }}>
-                                <Text style={{
-                                    color: 'black'
-                                }}>ACCEPTED_ON_HOLD</Text>
-                            </View>
+                            {
+                                statusArray.map((status, index) => (
+                                    <TouchableOpacity
+                                        key={index}
+                                        onPress={() => handleStatusClick(status)}
+                                        style={{
+                                            backgroundColor: selectedStatus === status ? '#0D6EFD' : '#F1F1F1',
+                                            padding: 8,
+                                            margin: 4,
+                                            borderRadius: 4
+                                        }}
+                                    >
+                                        <Text style={{ color: selectedStatus === status ? 'white' : 'black' }}>{status}</Text>
+                                    </TouchableOpacity>
+                                ))
+                            }
+                            {/* </>
+                            } */}
 
                         </View>
 
@@ -236,21 +385,28 @@ const TaskDetails = () => {
                                 <TextInput
                                     style={styles.input}
                                     placeholder='Enter description'
+                                    onChangeText={text => setStatusDescription(text)}
+                                    value={statusDescription}
                                 />
                             </View>
-                            <TouchableOpacity style={{
-                                width: '20%',
-                                margin: 4,
-                                color: 'white',
-                                backgroundColor: '#0D6EFD',
-                                padding: 8,
-                                borderRadius: 4
-                            }}>
-                                <Text style={{
-                                    color: 'white',
-                                    fontSize: 15
-                                }}>Save</Text>
-                            </TouchableOpacity>
+                            {
+                                selectedStatus &&
+                                <TouchableOpacity
+                                    onPress={() => taskStatusSave()}
+                                    style={{
+                                        width: '20%',
+                                        margin: 4,
+                                        color: 'white',
+                                        backgroundColor: '#0D6EFD',
+                                        padding: 8,
+                                        borderRadius: 4
+                                    }}>
+                                    <Text style={{
+                                        color: 'white',
+                                        fontSize: 15
+                                    }}>Save</Text>
+                                </TouchableOpacity>
+                            }
                         </View>
 
                     </View>
@@ -269,42 +425,6 @@ const TaskDetails = () => {
                                 color: 'black'
                             }}>upload files</Text>
                         </View>
-
-                        {/* <View style={{
-                            width: '100%',
-                            flexDirection: 'row'
-                        }}>
-                            <View style={{
-                                backgroundColor: '#F1F1F1',
-                                padding: 8,
-                                margin: 4
-                            }}>
-                                <Text style={{
-                                    color: 'black'
-                                }}>ESCALATED</Text>
-                            </View>
-
-                            <View style={{
-                                backgroundColor: '#F1F1F1',
-                                padding: 8,
-                                margin: 4
-                            }}>
-                                <Text style={{
-                                    color: 'black'
-                                }}>ACCEPTED_OPEN</Text>
-                            </View>
-
-                            <View style={{
-                                backgroundColor: '#F1F1F1',
-                                padding: 8,
-                                margin: 4
-                            }}>
-                                <Text style={{
-                                    color: 'black'
-                                }}>ACCEPTED_ON_HOLD</Text>
-                            </View>
-
-                        </View> */}
 
                         <View>
                             <View>
@@ -327,6 +447,8 @@ const TaskDetails = () => {
                                 <TextInput
                                     style={styles.input}
                                     placeholder='Enter description'
+                                    onChangeText={text => setFileDescription(text)}
+                                    value={fileDescription}
                                 />
                             </View>
                             <TouchableOpacity style={{
@@ -379,6 +501,7 @@ const styles = StyleSheet.create({
     TaskHomeWrapper: {
         flex: 1,
         alignItems: "center",
+        backgroundColor: 'white'
     },
     THHeaderNav: {
         width: '100%',
