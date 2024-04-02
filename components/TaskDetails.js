@@ -1,6 +1,17 @@
 import React, { useEffect, useState } from 'react'
 import { SafeAreaView, View, Text, StyleSheet, Image, TouchableOpacity, ImageBackground, TextInput, ScrollView } from 'react-native'
 import userAvt from '../images/userAvt.png'
+import ViewJobList from '../images/ic_view_job_list.png'
+import TaskOpen from '../images/task_open.png'
+import Triangle from '../images/triangle_in_path.png'
+import TaskHold from '../images/task_end_in_path.png'
+import TaskEscalated from '../images/escalated.png'
+import TravelStart from '../images/travel_start_in_path.png'
+import TravelEnd from '../images/travel_end_in_path.png'
+import TaskStart from '../images/task_start_in_path.png'
+import TaskEnd from '../images/task_end.png'
+import completed from '../images/ic_check_scanned_button.png'
+import beyondScope from '../images/task_end_in_path.png'
 import { useRoute } from '@react-navigation/native'
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -21,6 +32,8 @@ const TaskDetails = () => {
     const [statusDescription, setStatusDescription] = useState('')
     const [fileDescription, setFileDescription] = useState('')
 
+    const [endStatusFlow, setEndStatusFlow] = useState([])
+
     const initStatus = ['ESCALATED', 'ACCEPTED_OPEN', 'ACCEPTED_ON_HOLD']
     const travelStart = ['TRAVEL_START']
     const travelStop = ['TRAVEL_END']
@@ -29,6 +42,13 @@ const TaskDetails = () => {
     const lastStatus = ['CUSTOMER_REJECTION', 'COMPLETED', 'BEYOND THE SCOPE']
 
     const [selectedStatus, setSelectedStatus] = useState(null);
+
+    let currentDate = new Date();
+    let formattedDate = currentDate.toISOString().replace("T", " ").replace("Z", "");
+
+    console.log(formattedDate);
+
+
 
     const handleStatusClick = (item) => {
         setSelectedStatus(item === selectedStatus ? null : item);
@@ -67,19 +87,20 @@ const TaskDetails = () => {
         fetchTaskData();
     }, [task_id])
 
-    useEffect(() => {
-        const fetchHistoryData = async () => {
-            if (task_id) {
-                try {
-                    const response = await axios.get(`https://cubixweberp.com:156/api/CRMTAskHistoryList/cpays/all/-/${task_id}/`);
-                    const data = response.data;
-                    setTaskHistory(data)
+    const fetchHistoryData = async () => {
+        if (task_id) {
+            try {
+                const response = await axios.get(`https://cubixweberp.com:156/api/CRMTAskHistoryList/cpays/all/-/${task_id}/`);
+                const data = response.data;
+                setTaskHistory(data)
 
-                } catch (error) {
-                    console.error('Error fetching data:', error);
-                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
             }
-        };
+        }
+    };
+
+    useEffect(() => {
 
         fetchHistoryData();
     }, [task_id])
@@ -99,36 +120,54 @@ const TaskDetails = () => {
     }, [])
 
     useEffect(() => {
-        if (taskHistory) {
+        if (taskHistory && taskData) {
             if (taskHistory.length == 0) {
                 setStatusArray(initStatus)
+            } else if (taskHistory[0].task_status === 'ACCEPTED_OPEN' && taskData[0]?.include_travel === 'Y') {
+                setStatusArray(travelStart)
+            } else if (taskHistory[0].task_status === 'ACCEPTED_OPEN' && taskData[0]?.include_travel === 'N') {
+                setStatusArray(taskStart)
+            } else if (taskHistory[0].task_status === 'TRAVEL_START') {
+                setStatusArray(travelStop)
+            } else if (taskHistory[0].task_status === 'TASK_START') {
+                setStatusArray(taskStop)
+            } else if (taskHistory[0].task_status === 'TRAVEL_END') {
+                setStatusArray(taskStart)
+            } else if (taskHistory[0].task_status === 'TASK_END') {
+                setStatusArray(lastStatus)
+            } else if (taskHistory[0].task_status === 'ESCALATED' || taskHistory[0].task_status === 'ACCEPTED_ON_HOLD' || taskHistory[0].task_status === 'CUSTOMER_REJECTION' || taskHistory[0].task_status === 'COMPLETED' || taskHistory[0].task_status === 'BEYOND THE SCOPE') {
+                setEndStatusFlow([taskHistory[0].task_status]);
             }
         }
-    }, [taskHistory])
+    }, [taskHistory, taskData])
+
+    console.log('statusArray', statusArray)
 
     // taskstatusSave
     const taskStatusSave = async () => {
+
+        setStatusDescription('')
 
         const statusCode = allStatusList.find((item) => item.code_name === selectedStatus)?.code_value;
 
         let reqData = [
             {
                 cmpcode: "CPAYS",
-                created_on: created_on.replace("T", " "),
-                latitude: userData && userData.latitude.toString(),
-                longitude: userData && userData.longitude.toString(),
                 mode: "ENTRY",
-                name_of_file_uploaded: "",
                 task_id: task_id,
-                task_ownder_id: userData && userData.empid,
-                task_ownder_name: userData && userData.Name,
-                task_scheduledon: task_scheduledon,
-                task_stage: '',
-                task_stage_code: '0',
-                task_stage_description: statusDescription,
                 task_status: selectedStatus,
                 task_status_code: statusCode,
                 task_status_description: statusDescription,
+                task_stage: taskHistory.length === 0 ? '' : selectedStatus,
+                task_stage_code: taskHistory.length === 0 ? '0' : statusCode,
+                task_stage_description: statusDescription,
+                task_scheduledon: task_scheduledon,
+                task_ownder_id: userData && userData.empid,
+                task_ownder_name: userData && userData.Name,
+                latitude: userData && userData.latitude.toString(),
+                longitude: userData && userData.longitude.toString(),
+                created_on: currentDate,
+                name_of_file_uploaded: "",
             }
         ]
 
@@ -142,18 +181,56 @@ const TaskDetails = () => {
                 }
             }).then((res) => {
                 console.log(res, 'taskSave')
+                fetchHistoryData()
+                setSelectedStatus(null)
             })
         } catch (error) {
             console.error('Error fetching data:', error);
         }
     }
 
+    // timelineImage
+    const getImageForStatus = (status) => {
+        switch (status) {
+            case 'ACCEPTED_OPEN':
+                return TaskOpen
+            case 'TRAVEL_START':
+                return TravelStart
+            case 'TRAVEL_END':
+                return TravelEnd
+            case 'TASK_START':
+                return TaskStart
+            case 'TASK_END':
+                return TaskEnd
+            case 'ESCALATED':
+                return TaskEscalated
+            case 'ACCEPTED_ON_HOLD':
+                return TaskHold
+            case 'CUSTOMER_REJECTION':
+                return Triangle
+            case 'COMPLETED':
+                return completed
+            case 'BEYOND THE SCOPE':
+                return beyondScope
+            // Add cases for other statuses as needed
+            // default:
+            //     return require('../images/default_image.png');
+        }
+    };
+
+    const formatDate = (dateString) => {
+        const options = { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true };
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', options);
+    };
+
+
     // console.log(taskData)
-    // console.log(taskHistory)
+    console.log('taskHistory', taskHistory)
 
     // console.log(allStatusList)
 
-    console.log(statusArray)
+    // console.log(statusArray)
 
     // console.log(task_id, created_on, task_scheduledon)
     return (
@@ -350,45 +427,73 @@ const TaskDetails = () => {
 
                         <View style={{
                             width: '100%',
-                            flexDirection: 'row'
+                            flexDirection: 'row',
+                            flexWrap: 'wrap'
                         }}>
-                            {/* {
-                                taskHistory?.length == 0 &&
-                                <> */}
+                            {
+                                endStatusFlow.length == 0 &&
+                                <>
+
+                                    {
+                                        statusArray.map((status, index) => (
+                                            <TouchableOpacity
+                                                key={index}
+                                                onPress={() => handleStatusClick(status)}
+                                                style={{
+                                                    backgroundColor: selectedStatus === status ? '#0D6EFD' : '#F1F1F1',
+                                                    padding: 8,
+                                                    margin: 4,
+                                                    borderRadius: 4,
+                                                    display: 'flex',
+                                                    flexDirection: 'row',
+                                                    justifyContent: 'center',
+                                                    alignItems: 'center',
+                                                    width: 'auto',
+                                                    height: "auto"
+                                                }}
+                                            >
+                                                <Image style={{ width: 25, height: 25, marginRight: 12 }} source={getImageForStatus(status)}></Image>
+                                                <Text style={{ color: selectedStatus === status ? 'white' : 'black' }}>{status}</Text>
+                                            </TouchableOpacity>
+                                        ))
+                                    }
+                                </>
+                            }
 
                             {
-                                statusArray.map((status, index) => (
-                                    <TouchableOpacity
-                                        key={index}
-                                        onPress={() => handleStatusClick(status)}
-                                        style={{
-                                            backgroundColor: selectedStatus === status ? '#0D6EFD' : '#F1F1F1',
-                                            padding: 8,
-                                            margin: 4,
-                                            borderRadius: 4
-                                        }}
-                                    >
-                                        <Text style={{ color: selectedStatus === status ? 'white' : 'black' }}>{status}</Text>
-                                    </TouchableOpacity>
-                                ))
+                                endStatusFlow.length > 0 &&
+                                <TouchableOpacity
+                                    style={{
+                                        backgroundColor: '#0D6EFD',
+                                        padding: 8,
+                                        margin: 4,
+                                        borderRadius: 4
+                                    }}
+                                >
+                                    <Text style={{ color: 'white' }}>{endStatusFlow[0]}</Text>
+                                </TouchableOpacity>
                             }
-                            {/* </>
-                            } */}
 
                         </View>
 
                         <View>
-                            <View>
-                                <Text>optional</Text>
-                            </View>
-                            <View style={[styles.inputContainer]}>
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder='Enter description'
-                                    onChangeText={text => setStatusDescription(text)}
-                                    value={statusDescription}
-                                />
-                            </View>
+                            {
+                                endStatusFlow.length == 0 &&
+                                <>
+                                    <View>
+                                        <Text>optional</Text>
+                                    </View>
+                                    <View style={[styles.inputContainer]}>
+                                        <TextInput
+                                            style={styles.input}
+                                            placeholder='Enter description'
+                                            onChangeText={text => setStatusDescription(text)}
+                                            value={statusDescription}
+                                        />
+                                    </View>
+                                </>
+                            }
+
                             {
                                 selectedStatus &&
                                 <TouchableOpacity
@@ -470,7 +575,8 @@ const TaskDetails = () => {
 
                     <View style={{
                         width: '100%',
-                        paddingHorizontal: 12
+                        paddingHorizontal: 6,
+                        backgroundColor: '#F1F1FB',
                     }}>
 
                         <View>
@@ -480,11 +586,85 @@ const TaskDetails = () => {
                                 fontWeight: 'bold'
                             }}>Task timeline</Text>
                         </View>
-                        <View>
-                            <Text style={{
-                                color: 'black'
-                            }}>no activity to show</Text>
-                        </View>
+                        {
+                            taskHistory?.length == 0 &&
+                            <View>
+                                <Text style={{
+                                    color: 'black'
+                                }}>no activity to show</Text>
+                            </View>
+                        }
+
+                        {
+                            taskHistory?.length > 0 &&
+
+                            <View style={{
+                                width: '100%',
+                                marginTop: 20,
+                                backgroundColor: '#F1F1FB',
+                                padding: 8,
+                                marginLeft: 24,
+                                borderLeftWidth: 2, borderLeftColor: '#ff1010',
+                                position: 'relative'
+
+                            }}>
+                                {
+                                    taskHistory.map((history, index) => (
+                                        <>
+                                            <View key={index} style={{
+                                                // flexDirection: 'row',
+                                                width: '60%',
+                                                alignItems: 'left',
+                                                margin: 12
+                                                // position: 'relative'
+
+                                            }}>
+                                                <View style={{
+                                                    backgroundColor: 'white',
+                                                    width: 45,
+                                                    height: 45,
+                                                    borderRadius: 50,
+                                                    justifyContent: 'center',
+                                                    alignItems: 'center',
+                                                    position: 'absolute',
+                                                    zIndex: 2,
+                                                    left: -42,
+                                                    top: 20
+                                                }}>
+                                                    <Image source={getImageForStatus(history.task_status)}></Image>
+                                                </View>
+                                                <View style={{
+                                                    marginLeft: 10,
+                                                    // borderLeftWidth: 2, borderLeftColor: '#ff1010'
+                                                }}>
+                                                    <View style={{
+                                                        backgroundColor: 'white',
+                                                        padding: 8,
+                                                        margin: 4,
+                                                        marginLeft: 25,
+                                                    }}>
+                                                        <Text style={{
+                                                            color: 'black'
+                                                        }}>{formatDate(history.created_on)}</Text>
+                                                    </View>
+
+                                                    <View style={{
+                                                        backgroundColor: '#F0F8FF',
+                                                        padding: 8,
+                                                        margin: 4,
+                                                        marginLeft: 25,
+                                                    }}>
+                                                        <Text style={{ color: 'black', fontSize: 16 }}>{history.task_status}</Text>
+                                                        <Text style={{ color: 'black', marginTop: 4 }}>{history.task_status_description}</Text>
+                                                    </View>
+                                                </View>
+                                            </View>
+                                        </>
+                                    ))
+                                }
+
+                            </View>
+                        }
                     </View>
 
                 </View>

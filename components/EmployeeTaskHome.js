@@ -77,8 +77,8 @@ const EmployeeTaskHome = () => {
 
     const fetchData = async () => {
         try {
-            const response = await axios.get(`https://cubixweberp.com:156/api/CRMTaskMainList/CPAYS/owner/${empId}/-/-/-/-/2024-01-10/2024-03-28/-`);
-            // const response = await axios.get(`https://cubixweberp.com:156/api/CRMTaskMainList/CPAYS/owner/AJMAL/-/-/-/-/2024-01-10/2024-03-28/-`);
+            const response = await axios.get(`https://cubixweberp.com:156/api/CRMTaskMainList/CPAYS/owner/${empId}/-/-/-/-/2024-01-10/2024-12-28/-`);
+            // const response = await axios.get(`https://cubixweberp.com:156/api/CRMTaskMainList/CPAYS/owner/AJMAL/-/-/-/-/2024-01-10/2024-12-28/-`);
             setTaskList(response.data);
             console.log('fetchData')
         } catch (error) {
@@ -88,7 +88,7 @@ const EmployeeTaskHome = () => {
 
     const fetchDataNew = async () => {
         try {
-            const response = await axios.get(`https://cubixweberp.com:156/api/CRMTaskMainList/CPAYS/owner/${empId}/-/-/-/-/2024-01-10/2024-03-28/-`);
+            const response = await axios.get(`https://cubixweberp.com:156/api/CRMTaskMainList/CPAYS/owner/${empId}/-/-/-/-/2024-01-10/2024-12-28/-`);
             // const response = await axios.get(`https://cubixweberp.com:156/api/CRMTaskMainList/CPAYS/owner/AJMAL/-/-/-/-/2024-01-10/2024-03-28/-`);
             setTaskList(response.data);
             showTaskSaveToast()
@@ -276,7 +276,7 @@ const EmployeeTaskHome = () => {
         const day = String(date.getDate()).padStart(2, '0');
 
         // Formatted date in yyyy-MM-dd format
-        const formattedDate = `${year}-${month}-${day}`;
+        const formattedDate = `${year}/${month}/${day}`;
 
         setDate(formattedDate);
         hideDatePicker();
@@ -807,6 +807,28 @@ const EmployeeTaskHome = () => {
                                 </View>
 
                             </View>
+
+                            {
+                                combinedDateTime === '' && date &&
+                                <View style={{
+                                    backgroundColor: 'green',
+                                    padding: 8,
+                                    borderRadius: 4
+                                }}>
+                                    <Text style={{ color: 'white' }}>{date ? date : ''}</Text>
+                                </View>
+                            }
+
+                            {
+                                combinedDateTime === '' && time &&
+                                <View style={{
+                                    backgroundColor: 'green',
+                                    padding: 8,
+                                    borderRadius: 4
+                                }}>
+                                    <Text style={{ color: 'white' }}>{time ? time : ''}</Text>
+                                </View>
+                            }
 
                             {
                                 combinedDateTime !== '' &&
