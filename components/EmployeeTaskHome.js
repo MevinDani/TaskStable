@@ -34,7 +34,7 @@ const EmployeeTaskHome = () => {
     const [taskname, setTaskName] = useState('');
     const [taskDescription, setTaskDescription] = useState('');
 
-    const [taskComesUnder, setTaskComesUnder] = useState(null)
+    const [taskComesUnder, setTaskComesUnder] = useState('Common Job')
 
     const [userData, setUserData] = useState(null)
 
@@ -51,25 +51,27 @@ const EmployeeTaskHome = () => {
         longitudeDelta: 0.0421,
     });
 
+    console.log('taskComesUnder', taskComesUnder)
+
     const navigation = useNavigation()
 
     const handleTaskComeUnder = (option) => {
         setTaskComesUnder(option)
     }
 
-    const [taskType, setTaskType] = useState(null)
+    const [taskType, setTaskType] = useState('Inhouse')
 
     const handleTaskType = (option) => {
         setTaskType(option)
     }
 
-    const [includeTravel, setIncludeTravel] = useState(null)
+    const [includeTravel, setIncludeTravel] = useState('N')
 
     const handleIncludeTravel = (option) => {
         setIncludeTravel(option)
     }
 
-    const [priorityLevel, setPriorityLevel] = useState(null)
+    const [priorityLevel, setPriorityLevel] = useState('Moderate')
 
     const handlePriorityLevel = (option) => {
         setPriorityLevel(option)
@@ -276,7 +278,7 @@ const EmployeeTaskHome = () => {
         const day = String(date.getDate()).padStart(2, '0');
 
         // Formatted date in yyyy-MM-dd format
-        const formattedDate = `${year}/${month}/${day}`;
+        const formattedDate = `${year}-${month}-${day}`;
 
         setDate(formattedDate);
         hideDatePicker();
