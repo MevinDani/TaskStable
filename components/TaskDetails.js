@@ -16,6 +16,7 @@ import { useRoute } from '@react-navigation/native'
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import Header from './Header'
+import DocumentPicker from 'react-native-document-picker';
 
 const TaskDetails = () => {
     const route = useRoute()
@@ -44,10 +45,14 @@ const TaskDetails = () => {
 
     const [selectedStatus, setSelectedStatus] = useState(null);
 
+    const [selectedFile, setSelectedFile] = useState(null);
+
+    const [userAttendance, setUserAttendance] = useState(null);
+
     let currentDate = new Date();
     let formattedDate = currentDate.toISOString().replace("T", " ").replace("Z", "");
 
-    console.log(formattedDate);
+    // console.log(formattedDate);
 
 
 
@@ -62,7 +67,7 @@ const TaskDetails = () => {
                 const userData = JSON.parse(userDataJson);
                 // Now you have userData, you can use it here
                 setUserData(userData)
-                console.log(userData, 'userData')
+                console.log('userData', userData)
 
             } catch (error) {
                 console.error('Error fetching user data:', error);
@@ -142,7 +147,9 @@ const TaskDetails = () => {
         }
     }, [taskHistory, taskData])
 
-    console.log('statusArray', statusArray)
+    // console.log('statusArray', statusArray)
+
+    console.log('userData', userData)
 
     // taskstatusSave
     const taskStatusSave = async () => {
@@ -150,6 +157,8 @@ const TaskDetails = () => {
         setStatusDescription('')
 
         const statusCode = allStatusList.find((item) => item.code_name === selectedStatus)?.code_value;
+
+        // console.log('statusCode', statusCode)
 
         let reqData = [
             {
@@ -172,9 +181,11 @@ const TaskDetails = () => {
             }
         ]
 
+        console.log('reqData', reqData)
+
         let stringifiedJson = JSON.stringify(reqData)
 
-        console.log(stringifiedJson)
+        console.log('stringifiedJson', stringifiedJson)
         try {
             await axios.post(`https://cubixweberp.com:156/api/CRMTaskHistory`, stringifiedJson, {
                 headers: {
@@ -225,9 +236,87 @@ const TaskDetails = () => {
         return date.toLocaleDateString('en-US', options);
     };
 
+    const handleFileSelection = async () => {
+        try {
+            const res = await DocumentPicker.pick({
+                type: [DocumentPicker.types.allFiles],
+            });
+
+            if (res) {
+                console.log(res)
+                setSelectedFile(res)
+                console.log(
+                    res.uri,
+                    res.type, // mime type
+                    res.name,
+                    res.size
+                );
+            }
+        } catch (err) {
+            if (DocumentPicker.isCancel(err)) {
+                // User cancelled the picker
+                console.log('User cancelled the picker');
+            } else {
+                throw err;
+            }
+        }
+    };
+
+    const handleUpload = async () => {
+        try {
+            // Create FormData object
+            const formData = new FormData();
+            const file = {
+                uri: selectedFile[0].uri,
+                type: selectedFile[0].type,
+                name: selectedFile[0].name,
+            };
+
+            console.log(file)
+            formData.append('image', file);; // Append the selected file
+            formData.append('description', fileDescription);
+            formData.append('UserId', userData && userData.empid); // Assuming historyTaskList is defined
+            formData.append('imagepath', selectedFile[0].uri);
+
+            console.log(formData)
+            // Send POST request using Axios
+            const response = await axios.post(
+                'https://cubixweberp.com:190/Posts',
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                }
+            );
+
+            console.log('Upload success:', response.data);
+        } catch (error) {
+            console.error('Upload error:', error);
+        }
+    };
+
+    useEffect(() => {
+        if (taskData) {
+            const fetchUserAttendance = async () => {
+                try {
+                    const response = await axios.get(`https://cubixweberp.com:156/api/CRMAttendanceList/CPAYS/${taskData[0].task_owner_name}`);
+                    setUserAttendance(response.data);
+                } catch (error) {
+                    console.error('Error fetching user attendance:', error);
+                }
+            };
+
+            fetchUserAttendance();
+        }
+
+    }, [taskData]);
+
+
+    console.log('userAttendanceFromDet', userAttendance)
 
     // console.log(taskData)
-    console.log('taskHistory', taskHistory)
+    // console.log('taskHistory', taskHistory)
 
     // console.log(allStatusList)
 
@@ -305,14 +394,14 @@ const TaskDetails = () => {
                     }}>
 
                         <View style={{
-                            width: '48%',
+                            width: '40%',
                             padding: 8,
                             paddingHorizontal: 8,
                             paddingVertical: 14,
                             margin: 4,
                             // borderColor: 'gray', // Border color
                             // borderWidth: 1, // Border width
-                            shadowColor: "#000",
+                            shadowColor: "black",
                             shadowOffset: {
                                 width: 0,
                                 height: 1,
@@ -327,14 +416,14 @@ const TaskDetails = () => {
                             <Text style={{ fontSize: 16, color: 'black' }}>{taskData ? taskData[0].include_travel : ''}</Text>
                         </View>
                         <View style={{
-                            width: '48%',
+                            width: '40%',
                             padding: 8,
                             paddingHorizontal: 8,
                             paddingVertical: 14,
                             margin: 4,
                             // borderColor: 'gray', // Border color
                             // borderWidth: 1, // Border width
-                            shadowColor: "#000",
+                            shadowColor: "black",
                             shadowOffset: {
                                 width: 0,
                                 height: 1,
@@ -348,14 +437,14 @@ const TaskDetails = () => {
                             <Text style={{ fontSize: 16, color: 'black' }}>{taskData ? taskData[0].priority : ''}</Text>
                         </View>
                         <View style={{
-                            width: '48%',
+                            width: '40%',
                             padding: 8,
                             paddingHorizontal: 8,
                             paddingVertical: 14,
                             margin: 4,
                             // borderColor: 'gray', // Border color
                             // borderWidth: 1, // Border width
-                            shadowColor: "#000",
+                            shadowColor: "black",
                             shadowOffset: {
                                 width: 0,
                                 height: 1,
@@ -369,14 +458,14 @@ const TaskDetails = () => {
                             <Text style={{ fontSize: 16, color: 'black' }}>{scheduledDate}</Text>
                         </View>
                         <View style={{
-                            width: '48%',
+                            width: '40%',
                             padding: 8,
                             paddingHorizontal: 8,
                             paddingVertical: 14,
                             margin: 4,
                             // borderColor: 'gray', // Border color
                             // borderWidth: 1, // Border width
-                            shadowColor: "#000",
+                            shadowColor: "black",
                             shadowOffset: {
                                 width: 0,
                                 height: 1,
@@ -390,14 +479,14 @@ const TaskDetails = () => {
                             <Text style={{ fontSize: 16, color: 'black' }}>{taskData ? taskData[0].task_owner_name : ''}</Text>
                         </View>
                         <View style={{
-                            width: '48%',
+                            width: '40%',
                             padding: 8,
                             paddingHorizontal: 8,
                             paddingVertical: 14,
                             margin: 4,
                             // borderColor: 'gray', // Border color
                             // borderWidth: 1, // Border width
-                            shadowColor: "#000",
+                            shadowColor: "black",
                             shadowOffset: {
                                 width: 0,
                                 height: 1,
@@ -413,168 +502,195 @@ const TaskDetails = () => {
                         </View>
                     </View>
 
-                    <View style={{
-                        width: '98%',
-                        padding: 12,
-                        margin: 8,
-                        backgroundColor: '#F8F8FF',
-                        borderRadius: 4
-                    }}>
+                    {
+                        userAttendance && userAttendance[0].type === 'IN' &&
+
+                        <>
+                            <View style={{
+                                width: '98%',
+                                padding: 12,
+                                margin: 8,
+                                backgroundColor: '#F8F8FF',
+                                borderRadius: 4
+                            }}>
 
 
-                        <View>
-                            <Text style={{
-                                color: 'black'
-                            }}>select status</Text>
-                        </View>
+                                <View>
+                                    <Text style={{
+                                        color: 'black'
+                                    }}>select status</Text>
+                                </View>
 
-                        <View style={{
-                            width: '100%',
-                            flexDirection: 'row',
-                            flexWrap: 'wrap'
-                        }}>
-                            {
-                                endStatusFlow.length == 0 &&
-                                <>
+                                <View style={{
+                                    width: '100%',
+                                    flexDirection: 'row',
+                                    flexWrap: 'wrap'
+                                }}>
+                                    {
+                                        endStatusFlow.length == 0 &&
+                                        <>
+
+                                            {
+                                                statusArray.map((status, index) => (
+                                                    <TouchableOpacity
+                                                        key={index}
+                                                        onPress={() => handleStatusClick(status)}
+                                                        style={{
+                                                            backgroundColor: selectedStatus === status ? '#0D6EFD' : '#F1F1F1',
+                                                            padding: 8,
+                                                            margin: 4,
+                                                            borderRadius: 4,
+                                                            display: 'flex',
+                                                            flexDirection: 'row',
+                                                            justifyContent: 'center',
+                                                            alignItems: 'center',
+                                                            width: 'auto',
+                                                            height: "auto"
+                                                        }}
+                                                    >
+                                                        <Image style={{ width: 25, height: 25, marginRight: 12 }} source={getImageForStatus(status)}></Image>
+                                                        <Text style={{ color: selectedStatus === status ? 'white' : 'black' }}>{status}</Text>
+                                                    </TouchableOpacity>
+                                                ))
+                                            }
+                                        </>
+                                    }
 
                                     {
-                                        statusArray.map((status, index) => (
-                                            <TouchableOpacity
-                                                key={index}
-                                                onPress={() => handleStatusClick(status)}
-                                                style={{
-                                                    backgroundColor: selectedStatus === status ? '#0D6EFD' : '#F1F1F1',
-                                                    padding: 8,
-                                                    margin: 4,
-                                                    borderRadius: 4,
-                                                    display: 'flex',
-                                                    flexDirection: 'row',
-                                                    justifyContent: 'center',
-                                                    alignItems: 'center',
-                                                    width: 'auto',
-                                                    height: "auto"
-                                                }}
-                                            >
-                                                <Image style={{ width: 25, height: 25, marginRight: 12 }} source={getImageForStatus(status)}></Image>
-                                                <Text style={{ color: selectedStatus === status ? 'white' : 'black' }}>{status}</Text>
-                                            </TouchableOpacity>
-                                        ))
+                                        endStatusFlow.length > 0 &&
+                                        <TouchableOpacity
+                                            style={{
+                                                backgroundColor: '#0D6EFD',
+                                                padding: 8,
+                                                margin: 4,
+                                                borderRadius: 4
+                                            }}
+                                        >
+                                            <Text style={{ color: 'white' }}>{endStatusFlow[0]}</Text>
+                                        </TouchableOpacity>
                                     }
-                                </>
-                            }
 
-                            {
-                                endStatusFlow.length > 0 &&
-                                <TouchableOpacity
-                                    style={{
-                                        backgroundColor: '#0D6EFD',
-                                        padding: 8,
-                                        margin: 4,
-                                        borderRadius: 4
-                                    }}
-                                >
-                                    <Text style={{ color: 'white' }}>{endStatusFlow[0]}</Text>
-                                </TouchableOpacity>
-                            }
+                                </View>
 
-                        </View>
+                                <View>
+                                    {
+                                        endStatusFlow.length == 0 &&
+                                        <>
+                                            <View>
+                                                <Text>optional</Text>
+                                            </View>
+                                            <View style={[styles.inputContainer]}>
+                                                <TextInput
+                                                    style={styles.input}
+                                                    placeholder='Enter description'
+                                                    onChangeText={text => setStatusDescription(text)}
+                                                    value={statusDescription}
+                                                />
+                                            </View>
+                                        </>
+                                    }
 
-                        <View>
-                            {
-                                endStatusFlow.length == 0 &&
-                                <>
+                                    {
+                                        selectedStatus &&
+                                        <TouchableOpacity
+                                            onPress={() => taskStatusSave()}
+                                            style={{
+                                                width: '20%',
+                                                margin: 4,
+                                                color: 'white',
+                                                backgroundColor: '#0D6EFD',
+                                                padding: 8,
+                                                borderRadius: 4
+                                            }}>
+                                            <Text style={{
+                                                color: 'white',
+                                                fontSize: 15
+                                            }}>Save</Text>
+                                        </TouchableOpacity>
+                                    }
+                                </View>
+
+                            </View>
+
+                            <View style={{
+                                width: '98%',
+                                padding: 12,
+                                margin: 8,
+                                backgroundColor: '#F8F8FF',
+                                borderRadius: 4
+                            }}>
+
+
+                                <View>
+                                    <Text style={{
+                                        color: 'black'
+                                    }}>upload files</Text>
+                                </View>
+
+                                <View>
                                     <View>
-                                        <Text>optional</Text>
+                                        <TouchableOpacity onPress={handleFileSelection} style={{
+                                            width: '30%',
+                                            margin: 4,
+                                            color: 'white',
+                                            backgroundColor: '#EFEFEF',
+                                            padding: 8,
+                                            borderRadius: 4
+                                        }}>
+                                            <Text style={{
+                                                color: 'black',
+                                                fontSize: 15
+                                            }}>Choose file</Text>
+                                        </TouchableOpacity>
+                                        {
+                                            selectedFile ? <Text>{selectedFile[0].name}</Text> :
+                                                <Text>No File Chosen</Text>
+                                        }
                                     </View>
                                     <View style={[styles.inputContainer]}>
                                         <TextInput
                                             style={styles.input}
                                             placeholder='Enter description'
-                                            onChangeText={text => setStatusDescription(text)}
-                                            value={statusDescription}
+                                            onChangeText={text => setFileDescription(text)}
+                                            value={fileDescription}
                                         />
                                     </View>
-                                </>
-                            }
+                                    {
+                                        selectedFile &&
+                                        <TouchableOpacity onPress={handleUpload} style={{
+                                            width: '20%',
+                                            margin: 4,
+                                            color: 'white',
+                                            backgroundColor: '#FFC107',
+                                            padding: 8,
+                                            borderRadius: 4
+                                        }}>
+                                            <Text style={{
+                                                color: 'black',
+                                                fontSize: 15
+                                            }}>Upload</Text>
+                                        </TouchableOpacity>
 
-                            {
-                                selectedStatus &&
-                                <TouchableOpacity
-                                    onPress={() => taskStatusSave()}
-                                    style={{
-                                        width: '20%',
-                                        margin: 4,
-                                        color: 'white',
-                                        backgroundColor: '#0D6EFD',
-                                        padding: 8,
-                                        borderRadius: 4
-                                    }}>
-                                    <Text style={{
-                                        color: 'white',
-                                        fontSize: 15
-                                    }}>Save</Text>
-                                </TouchableOpacity>
-                            }
-                        </View>
+                                    }
+                                </View>
 
-                    </View>
+                            </View>
+                        </>
+                    }
 
-                    <View style={{
-                        width: '98%',
-                        padding: 12,
-                        margin: 8,
-                        backgroundColor: '#F8F8FF',
-                        borderRadius: 4
-                    }}>
+                    {
+                        userAttendance && userAttendance[0].type === 'OUT' &&
 
-
-                        <View>
+                        <View style={{
+                            margin: 8
+                        }}>
                             <Text style={{
-                                color: 'black'
-                            }}>upload files</Text>
+                                color: 'red',
+                                fontWeight: 'bold'
+                            }}>You need to check in to update tasks</Text>
                         </View>
+                    }
 
-                        <View>
-                            <View>
-                                <TouchableOpacity style={{
-                                    width: '30%',
-                                    margin: 4,
-                                    color: 'white',
-                                    backgroundColor: '#EFEFEF',
-                                    padding: 8,
-                                    borderRadius: 4
-                                }}>
-                                    <Text style={{
-                                        color: 'black',
-                                        fontSize: 15
-                                    }}>Choose file</Text>
-                                </TouchableOpacity>
-                                <Text>No File Chosen</Text>
-                            </View>
-                            <View style={[styles.inputContainer]}>
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder='Enter description'
-                                    onChangeText={text => setFileDescription(text)}
-                                    value={fileDescription}
-                                />
-                            </View>
-                            <TouchableOpacity style={{
-                                width: '20%',
-                                margin: 4,
-                                color: 'white',
-                                backgroundColor: '#FFC107',
-                                padding: 8,
-                                borderRadius: 4
-                            }}>
-                                <Text style={{
-                                    color: 'black',
-                                    fontSize: 15
-                                }}>Upload</Text>
-                            </TouchableOpacity>
-                        </View>
-
-                    </View>
 
                     <View style={{
                         width: '100%',

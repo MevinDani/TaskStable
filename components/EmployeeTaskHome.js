@@ -6,7 +6,7 @@ import DateTimePickerModal from "react-native-modal-datetime-picker";
 import ToastManager, { Toast } from 'toastify-react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LocationModal from './LocationModal';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_DEFAULT, PROVIDER_GOOGLE, PROVIDER_OSMDROID } from 'react-native-maps';
 import { PermissionsAndroid } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
 import { Linking } from 'react-native';
@@ -118,7 +118,7 @@ const EmployeeTaskHome = () => {
             const punchTime = new Date(userAttendance[0].punch_time);
             const punchTimeString = punchTime.toISOString().slice(0, 10); // Get the date part of the ISO string
 
-            if (punchTimeString === currentDateString) {
+            if (punchTimeString === currentDateString && userAttendance[0].type === 'IN') {
                 console.log('Punch time is from today');
                 setCheckInOut('CHECKOUT');
                 const latitude = userAttendance && parseFloat(userAttendance[0].latitude);
@@ -144,7 +144,7 @@ const EmployeeTaskHome = () => {
                         // Store updated userData back to AsyncStorage
                         await AsyncStorage.setItem('userData', JSON.stringify(userData));
 
-                        console.log(userData, 'userData');
+                        console.log('userData', userData);
                         // showUserDataToast(userData);
 
                     } catch (error) {
@@ -159,14 +159,18 @@ const EmployeeTaskHome = () => {
                     latitude,
                     longitude
                 }));
-            } else {
+            } else if (punchTimeString === currentDateString && userAttendance[0].type === 'OUT') {
+                console.log('Punch time is from today, but type is OUT');
+                setCheckInOut('CHECKIN');
+            } else if (punchTimeString !== currentDateString) {
                 console.log('Punch time is not from today');
                 setCheckInOut('CHECKIN');
             }
         }
     }, [userAttendance]); // Run this effect whenever userAttendance changes
 
-    console.log('userAttendance', userAttendance)
+    // console.log('userAttendance', userAttendance)
+    // console.log('userData', userData)
 
     // useEffect(() => {
     //     if (mapRegion.latitude !== 0) {
@@ -239,7 +243,7 @@ const EmployeeTaskHome = () => {
         fetchUserData();
     }, []);
 
-    console.log(userData)
+    console.log(userData, 'userData')
 
     const showTaskSaveToast = () => {
         Toast.success('Task Added Successfully')
@@ -255,7 +259,7 @@ const EmployeeTaskHome = () => {
 
     const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
     const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
-
+    
     const [date, setDate] = useState('')
     const [time, setTime] = useState('')
 
@@ -404,32 +408,6 @@ const EmployeeTaskHome = () => {
 
                 console.log('Response:', response.data);
 
-                // const response = await axios.post('https://cubixweberp.com:156/api/CRMTaskMain', [
-                //     {
-                //         "cmpcode": "CPAYS",
-                //         "mode": "ENTRY",
-                //         "task_id": "DE9ECBC2-F1DF-40F1-BC67-4BD3087978BD",
-                //         "task_name": taskname,
-                //         "task_description": taskDescription,
-                //         "include_travel": includeTravel,
-                //         "job_code": "",
-                //         "priority": priorityLevel,
-                //         "task_scheduledon": combinedDateTime,
-                //         "task_owner_id": "AJMAL",
-                //         "task_ownder_name": "AJMAL",
-                //         "task_ownder_dept": "",
-                //         "task_comes_under": taskComesUnder,
-                //         "task_type": taskType,
-                //         "latest_status": "",
-                //         "latest_status_code": "",
-                //         "latest_stage": "",
-                //         "latest_stage_code": "",
-                //         "created_on": createdOn,
-                //         "task_creator_name": empId,
-                //         "task_creator_id": empId
-                //     }
-                // ]);
-
                 // Assuming a successful response has status code 200
                 if (response.status === 200) {
                     showTaskSaveToast()
@@ -515,6 +493,60 @@ const EmployeeTaskHome = () => {
         }
     };
 
+    const sendCheckInOutReq = async () => {
+        let reqData; // Declare reqData variable outside of if statements to make it accessible
+
+        if (checkInOutText === 'CHECKIN') {
+            reqData = [{
+                cmpcode: 'CPAYS',
+                mode: 'entry',
+                username: empId,
+                type: "IN",
+                jobid: "-",
+                shift: "-",
+                latitude: mapRegion.latitude.toString(),
+                longitude: mapRegion.longitude.toString(),
+            }];
+        } else if (checkInOutText === 'CHECKOUT') {
+            reqData = [{
+                cmpcode: 'CPAYS',
+                mode: 'entry',
+                username: empId,
+                type: "IN",
+                jobid: "-",
+                shift: "-",
+                latitude: mapRegion.latitude.toString(),
+                longitude: mapRegion.longitude.toString(),
+            }];
+        }
+
+        try {
+            console.log('reqData', reqData)
+            let stringifiedJSON = JSON.stringify(reqData);
+            console.log('stringifiedJSON', stringifiedJSON)
+            // Send a POST request to the endpoint with the reqData
+            const response = await axios.post(
+                'https://cubixweberp.com:156/api/CRMAttendance',
+                stringifiedJSON, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+            );
+
+            // Handle the response
+            console.log('Response:', response.data);
+            if (response.status === 200) {
+                // Call fetchUserAttendance
+                fetchUserAttendance();
+                setMapModalVisible(false)
+            }
+        } catch (error) {
+            // Handle errors
+            console.error('Error:', error);
+        }
+    };
+
     const getUserLocation = () => {
         Geolocation.getCurrentPosition(
             position => {
@@ -564,19 +596,19 @@ const EmployeeTaskHome = () => {
         Linking.openSettings();
     };
 
-    console.log('mapRegion', mapRegion)
+    // console.log('mapRegion', mapRegion)
 
 
     // console.log(taskList)
     // console.log(date, 'date')
     // console.log(time, 'time')
 
-    console.log('empId', empId)
+    // console.log('empId', empId)
 
-    console.log('taskComesUnder', taskComesUnder)
-    console.log('taskType', taskType)
-    console.log('includeTravel', includeTravel)
-    console.log('priorityLevel', priorityLevel)
+    // console.log('taskComesUnder', taskComesUnder)
+    // console.log('taskType', taskType)
+    // console.log('includeTravel', includeTravel)
+    // console.log('priorityLevel', priorityLevel)
 
     return (
         <SafeAreaView style={styles.container}>
@@ -624,14 +656,28 @@ const EmployeeTaskHome = () => {
                         margin: 8
                     }}>
                         <Text style={{
-                            color: 'red'
-                        }}>You need to check in to add task and update tasks</Text>
+                            color: 'red',
+                            fontWeight: 'bold'
+                        }}>You need to check in to update tasks</Text>
                     </View>
                 }
 
                 {/* Add button */}
 
-                {
+                <View style={styles.AddButton}>
+                    <TouchableOpacity style={styles.buttonAdd} onPress={() => setModalVisible(true)}>
+                        <Image source={require('../images/addB.png')} style={{
+                            width: 25,
+                            height: 20,
+                        }}></Image>
+                        <Text style={{
+                            fontSize: 16,
+                            color: "black"
+                        }}>Add Task</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* {
                     checkInOutText === 'CHECKOUT' &&
                     <View style={styles.AddButton}>
                         <TouchableOpacity style={styles.buttonAdd} onPress={() => setModalVisible(true)}>
@@ -645,18 +691,51 @@ const EmployeeTaskHome = () => {
                             }}>Add Task</Text>
                         </TouchableOpacity>
                     </View>
-                }
+                } */}
 
                 {/* TaskTable */}
+                <ScrollView vertical={true} style={{
+                    marginTop: 8
+                }}>
+                    <ScrollView horizontal={true}>
+                        <View style={styles.TableContainer}>
+                            {/* Table Header */}
+                            <View style={styles.tableRow}>
+                                <Text style={styles.headerCell}>Name</Text>
+                                <Text style={styles.headerCell}>Description</Text>
+                                <Text style={styles.headerCell}>Scheduled on</Text>
+                                <Text style={styles.headerCell}>Task owner name</Text>
+                                <Text style={styles.headerCell}>Priority</Text>
+                            </View>
 
-                {
+                            {/* Table Data */}
+                            {
+                                taskList && taskList?.map((task, index) => (
+                                    <TouchableOpacity style={styles.tableRow} key={index} onPress={() => gotoTaskDetail(task)}>
+                                        <Text style={styles.dataCell}>{task.task_name}</Text>
+                                        <Text style={styles.dataCell}>{task.task_description}</Text>
+                                        <Text style={styles.dataCell}>{task.task_scheduledon}</Text>
+                                        <Text style={styles.dataCell}>{task.task_owner_name}</Text>
+                                        <Text style={[styles.dataCell, { backgroundColor: getPriorityColor(task.priority), color: getTextColor(task.priority) }]}>
+                                            {task.priority}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))
+                            }
+
+                            {/* Add more rows as needed */}
+                        </View>
+                    </ScrollView>
+                </ScrollView>
+
+                {/* {
                     checkInOutText === 'CHECKOUT' &&
+
                     <ScrollView vertical={true} style={{
                         marginTop: 8
                     }}>
                         <ScrollView horizontal={true}>
                             <View style={styles.TableContainer}>
-                                {/* Table Header */}
                                 <View style={styles.tableRow}>
                                     <Text style={styles.headerCell}>Name</Text>
                                     <Text style={styles.headerCell}>Description</Text>
@@ -665,7 +744,6 @@ const EmployeeTaskHome = () => {
                                     <Text style={styles.headerCell}>Priority</Text>
                                 </View>
 
-                                {/* Table Data */}
                                 {
                                     taskList && taskList?.map((task, index) => (
                                         <TouchableOpacity style={styles.tableRow} key={index} onPress={() => gotoTaskDetail(task)}>
@@ -680,12 +758,11 @@ const EmployeeTaskHome = () => {
                                     ))
                                 }
 
-                                {/* Add more rows as needed */}
                             </View>
                         </ScrollView>
                     </ScrollView>
 
-                }
+                } */}
 
 
 
@@ -1036,12 +1113,22 @@ const EmployeeTaskHome = () => {
                             <View style={styles.mapCont}>
                                 {mapRegion.latitude !== 0 && (
                                     <>
-                                        <MapView style={styles.map} region={mapRegion} provider={PROVIDER_GOOGLE}>
+                                        <MapView style={styles.map} initialRegion={mapRegion} provider={PROVIDER_OSMDROID}>
                                             <Marker coordinate={mapRegion} />
                                         </MapView>
                                         <Text>Test</Text>
                                     </>
                                 )}
+                            </View>
+                            <View style={{
+                                flexDirection: 'row',
+                                padding: 4,
+                                margin: 4,
+                                justifyContent: 'space-between',
+                                width: '100%'
+                            }}>
+                                <Text style={{ padding: 8, margin: 2, backgroundColor: 'green', color: 'white' }}>Latitude: {mapRegion.latitude}</Text>
+                                <Text style={{ padding: 8, margin: 2, backgroundColor: 'green', color: 'white' }}>Longitude: {mapRegion.longitude}</Text>
                             </View>
                             <View style={{
                                 flexDirection: 'row',
@@ -1114,7 +1201,7 @@ const EmployeeTaskHome = () => {
                                     borderRadius: 4,
                                     paddingHorizontal: 4
                                 }}>
-                                    <TouchableOpacity onPress={() => saveTask()} style={{
+                                    <TouchableOpacity onPress={() => sendCheckInOutReq()} style={{
                                         margin: 4,
                                         color: 'white'
                                     }}>
@@ -1128,8 +1215,8 @@ const EmployeeTaskHome = () => {
                 </Modal>
 
                 {/* <LocationModal mapModalVisible={mapModalVisible} /> */}
-            </View>
-        </SafeAreaView>
+            </View >
+        </SafeAreaView >
     )
 }
 
@@ -1274,7 +1361,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'green',
-        height: 500,
+        height: 400,
         width: '100%',
     },
     map: {
