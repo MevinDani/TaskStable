@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { SafeAreaView, StyleSheet, View, TextInput, TouchableOpacity, Text, Image, KeyboardAvoidingView } from 'react-native'
+import { SafeAreaView, StyleSheet, View, TextInput, TouchableOpacity, Text, Image, KeyboardAvoidingView, ActivityIndicator } from 'react-native'
 import LinearGradient from 'react-native-linear-gradient';
 import footerBg from '../images/footer_bg.png'
 import cloud from '../images/cloud_svg.png'
@@ -13,6 +13,8 @@ const Login = () => {
 
     const [userId, setUserId] = useState('');
     const [password, setPassword] = useState('');
+
+    const [loading, setLoading] = useState(false);
 
     const navigation = useNavigation()
 
@@ -32,6 +34,7 @@ const Login = () => {
         // Here you can implement your login logic
         console.log('UserId:', userId);
         console.log('Password:', password);
+        setLoading(true)
 
         setUserId('')
         setPassword('')
@@ -48,6 +51,7 @@ const Login = () => {
                 });
                 console.log('API response:', response.data);
                 if (response.data.length > 0 && userId.toLowerCase() == response.data[0].empid.toLowerCase()) {
+                    setLoading(false);
                     console.log('inside success route')
                     showLoginSuccessToast()
                     navigation.navigate('EmployeeHome')
@@ -65,14 +69,17 @@ const Login = () => {
 
                 } else if (response.data.length == 0) {
                     showLoginFailedToast()
+                    setLoading(false);
                 }
                 // Handle API response here (e.g., redirect to dashboard on successful login)
             } catch (error) {
                 console.error('Error:', error);
+                setLoading(false);
                 // Handle error (e.g., display error message to the user)
             }
         } else {
             showFormEmptyToast()
+            setLoading(false);
         }
 
     };
@@ -131,7 +138,10 @@ const Login = () => {
                             />
                         </View>
                         <TouchableOpacity style={styles.button} onPress={handleLogin}>
-                            <Text style={styles.buttonText}>Login</Text>
+                            {
+                                loading ? <ActivityIndicator size="large" color="white" /> :
+                                    <Text style={styles.buttonText}>Login</Text>
+                            }
                         </TouchableOpacity>
                     </View>
 

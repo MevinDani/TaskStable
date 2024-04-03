@@ -17,6 +17,8 @@ import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import Header from './Header'
 import DocumentPicker from 'react-native-document-picker';
+import ToastManager, { Toast } from 'toastify-react-native'
+
 
 const TaskDetails = () => {
     const route = useRoute()
@@ -48,6 +50,8 @@ const TaskDetails = () => {
     const [selectedFile, setSelectedFile] = useState(null);
 
     const [userAttendance, setUserAttendance] = useState(null);
+
+    const [viewImage, setViewImage] = useState(false)
 
     let currentDate = new Date();
     let formattedDate = currentDate.toISOString().replace("T", " ").replace("Z", "");
@@ -110,6 +114,16 @@ const TaskDetails = () => {
 
         fetchHistoryData();
     }, [task_id])
+
+    useEffect(() => {
+        if (taskHistory) {
+            if (taskHistory[0].name_of_file_uploaded === 'Y') {
+                setViewImage(true)
+            } else {
+                setViewImage(false)
+            }
+        }
+    }, [taskHistory])
 
     useEffect(() => {
         const fetchStatusListAll = async () => {
@@ -230,6 +244,12 @@ const TaskDetails = () => {
         }
     };
 
+    // toast
+
+    const showFileUploadToast = () => {
+        Toast.success('File Uploaded Successfully')
+    }
+
     const formatDate = (dateString) => {
         const options = { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true };
         const date = new Date(dateString);
@@ -243,7 +263,7 @@ const TaskDetails = () => {
             });
 
             if (res) {
-                console.log(res)
+                console.log('res', res)
                 setSelectedFile(res)
                 console.log(
                     res.uri,
@@ -275,7 +295,7 @@ const TaskDetails = () => {
             console.log(file)
             formData.append('image', file);; // Append the selected file
             formData.append('description', fileDescription);
-            formData.append('UserId', userData && userData.empid); // Assuming historyTaskList is defined
+            formData.append('UserId', taskHistory && taskHistory[0].id);
             formData.append('imagepath', selectedFile[0].uri);
 
             console.log(formData)
@@ -290,7 +310,13 @@ const TaskDetails = () => {
                 }
             );
 
-            console.log('Upload success:', response.data);
+            console.log('Upload success:', response);
+            if (response.status === 200) {
+                setFileDescription('')
+                setSelectedFile(null)
+                showFileUploadToast()
+                fetchHistoryData()
+            }
         } catch (error) {
             console.error('Upload error:', error);
         }
@@ -316,7 +342,7 @@ const TaskDetails = () => {
     console.log('userAttendanceFromDet', userAttendance)
 
     // console.log(taskData)
-    // console.log('taskHistory', taskHistory)
+    console.log('taskHistory', taskHistory)
 
     // console.log(allStatusList)
 
@@ -325,6 +351,7 @@ const TaskDetails = () => {
     // console.log(task_id, created_on, task_scheduledon)
     return (
         <SafeAreaView style={styles.container}>
+            <ToastManager width={350} height={100} textStyle={{ fontSize: 17 }} />
             <Header />
 
             <ScrollView vertical={true} style={{
@@ -627,24 +654,50 @@ const TaskDetails = () => {
                                     }}>upload files</Text>
                                 </View>
 
-                                <View>
-                                    <View>
-                                        <TouchableOpacity onPress={handleFileSelection} style={{
-                                            width: '30%',
-                                            margin: 4,
-                                            color: 'white',
-                                            backgroundColor: '#EFEFEF',
-                                            padding: 8,
-                                            borderRadius: 4
-                                        }}>
-                                            <Text style={{
-                                                color: 'black',
-                                                fontSize: 15
-                                            }}>Choose file</Text>
-                                        </TouchableOpacity>
+                                <View style={{
+                                    width: '100%'
+                                }}>
+                                    <View style={{
+                                        flexDirection: 'row',
+                                        width: '100%',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center'
+                                    }}>
+                                        <View>
+                                            <TouchableOpacity onPress={handleFileSelection} style={{
+                                                width: 'auto',
+                                                margin: 4,
+                                                color: 'white',
+                                                backgroundColor: '#EFEFEF',
+                                                padding: 8,
+                                                borderRadius: 4
+                                            }}>
+                                                <Text style={{
+                                                    color: 'black',
+                                                    fontSize: 15
+                                                }}>Choose file</Text>
+                                            </TouchableOpacity>
+                                            {
+                                                selectedFile ? <Text>{selectedFile[0].name}</Text> :
+                                                    <Text>No File Chosen</Text>
+                                            }
+                                        </View>
+
                                         {
-                                            selectedFile ? <Text>{selectedFile[0].name}</Text> :
-                                                <Text>No File Chosen</Text>
+                                            viewImage &&
+                                            <TouchableOpacity style={{
+                                                width: '30%',
+                                                margin: 4,
+                                                color: 'white',
+                                                backgroundColor: '#0D6EFD',
+                                                padding: 8,
+                                                borderRadius: 4
+                                            }}>
+                                                <Text style={{
+                                                    color: 'white',
+                                                    fontSize: 15
+                                                }}>View Image</Text>
+                                            </TouchableOpacity>
                                         }
                                     </View>
                                     <View style={[styles.inputContainer]}>
