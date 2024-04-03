@@ -15,6 +15,7 @@ import beyondScope from '../images/task_end_in_path.png'
 import { useRoute } from '@react-navigation/native'
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import Header from './Header'
 
 const TaskDetails = () => {
     const route = useRoute()
@@ -235,6 +236,7 @@ const TaskDetails = () => {
     // console.log(task_id, created_on, task_scheduledon)
     return (
         <SafeAreaView style={styles.container}>
+            <Header />
 
             <ScrollView vertical={true} style={{
                 marginTop: 8
@@ -242,12 +244,13 @@ const TaskDetails = () => {
                 <View style={styles.TaskHomeWrapper}>
 
                     {/* HeaderNav */}
-                    <View style={styles.THHeaderNav}>
+                    {/* <View style={styles.THHeaderNav}>
                         <View><Text>EXPERT</Text></View>
                         <View>
                             <Image source={require('../images/ic_hamburger.png')}></Image>
                         </View>
-                    </View>
+                    </View> */}
+
 
                     {/* UserBanner */}
                     <ImageBackground source={require('../images/header_background.png')} style={{

@@ -12,6 +12,7 @@ import Geolocation from '@react-native-community/geolocation';
 import { Linking } from 'react-native';
 import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import Header from './Header';
 
 
 // Get the device's screen dimensions
@@ -25,6 +26,12 @@ const { width, height } = Dimensions.get('window');
 
 const EmployeeTaskHome = () => {
 
+    const [taskComesUnder, setTaskComesUnder] = useState('Common Job')
+    const [taskType, setTaskType] = useState('Inhouse')
+    const [includeTravel, setIncludeTravel] = useState('N')
+    const [priorityLevel, setPriorityLevel] = useState('Moderate')
+
+
     const [taskList, setTaskList] = useState(null)
 
     const [modalVisible, setModalVisible] = useState(false);
@@ -33,8 +40,6 @@ const EmployeeTaskHome = () => {
 
     const [taskname, setTaskName] = useState('');
     const [taskDescription, setTaskDescription] = useState('');
-
-    const [taskComesUnder, setTaskComesUnder] = useState('Common Job')
 
     const [userData, setUserData] = useState(null)
 
@@ -51,27 +56,22 @@ const EmployeeTaskHome = () => {
         longitudeDelta: 0.0421,
     });
 
-    console.log('taskComesUnder', taskComesUnder)
-
     const navigation = useNavigation()
 
     const handleTaskComeUnder = (option) => {
         setTaskComesUnder(option)
     }
 
-    const [taskType, setTaskType] = useState('Inhouse')
 
     const handleTaskType = (option) => {
         setTaskType(option)
     }
 
-    const [includeTravel, setIncludeTravel] = useState('N')
 
     const handleIncludeTravel = (option) => {
         setIncludeTravel(option)
     }
 
-    const [priorityLevel, setPriorityLevel] = useState('Moderate')
 
     const handlePriorityLevel = (option) => {
         setPriorityLevel(option)
@@ -572,6 +572,12 @@ const EmployeeTaskHome = () => {
     // console.log(time, 'time')
 
     console.log('empId', empId)
+
+    console.log('taskComesUnder', taskComesUnder)
+    console.log('taskType', taskType)
+    console.log('includeTravel', includeTravel)
+    console.log('priorityLevel', priorityLevel)
+
     return (
         <SafeAreaView style={styles.container}>
             <ToastManager />
@@ -580,12 +586,13 @@ const EmployeeTaskHome = () => {
 
 
                 {/* HeaderNav */}
-                <View style={styles.THHeaderNav}>
-                    <View><Text>EXPERT</Text></View>
+                {/* <View style={styles.THHeaderNav}>
+                    <View><Image source={require('../images/xpertLogo.png')} style={{ height: 40, width: 120 }}></Image></View>
                     <View>
                         <Image source={require('../images/ic_hamburger.png')}></Image>
                     </View>
-                </View>
+                </View> */}
+                <Header />
 
                 {/* UserBanner */}
                 <ImageBackground source={require('../images/header_background.png')} style={{
@@ -610,54 +617,78 @@ const EmployeeTaskHome = () => {
                     </View>
                 </ImageBackground>
 
-                {/* AddButtton */}
-                <View style={styles.AddButton}>
-                    <TouchableOpacity style={styles.buttonAdd} onPress={() => setModalVisible(true)}>
-                        <Image source={require('../images/addB.png')} style={{
-                            width: 25,
-                            height: 20,
-                        }}></Image>
+                {
+                    checkInOutText === 'CHECKIN' &&
+
+                    <View style={{
+                        margin: 8
+                    }}>
                         <Text style={{
-                            fontSize: 16,
-                            color: "black"
-                        }}>Add Task</Text>
-                    </TouchableOpacity>
-                </View>
+                            color: 'red'
+                        }}>You need to check in to add task and update tasks</Text>
+                    </View>
+                }
+
+                {/* Add button */}
+
+                {
+                    checkInOutText === 'CHECKOUT' &&
+                    <View style={styles.AddButton}>
+                        <TouchableOpacity style={styles.buttonAdd} onPress={() => setModalVisible(true)}>
+                            <Image source={require('../images/addB.png')} style={{
+                                width: 25,
+                                height: 20,
+                            }}></Image>
+                            <Text style={{
+                                fontSize: 16,
+                                color: "black"
+                            }}>Add Task</Text>
+                        </TouchableOpacity>
+                    </View>
+                }
 
                 {/* TaskTable */}
-                <ScrollView vertical={true} style={{
-                    marginTop: 8
-                }}>
-                    <ScrollView horizontal={true}>
-                        <View style={styles.TableContainer}>
-                            {/* Table Header */}
-                            <View style={styles.tableRow}>
-                                <Text style={styles.headerCell}>Name</Text>
-                                <Text style={styles.headerCell}>Description</Text>
-                                <Text style={styles.headerCell}>Scheduled on</Text>
-                                <Text style={styles.headerCell}>Task owner name</Text>
-                                <Text style={styles.headerCell}>Priority</Text>
+
+                {
+                    checkInOutText === 'CHECKOUT' &&
+                    <ScrollView vertical={true} style={{
+                        marginTop: 8
+                    }}>
+                        <ScrollView horizontal={true}>
+                            <View style={styles.TableContainer}>
+                                {/* Table Header */}
+                                <View style={styles.tableRow}>
+                                    <Text style={styles.headerCell}>Name</Text>
+                                    <Text style={styles.headerCell}>Description</Text>
+                                    <Text style={styles.headerCell}>Scheduled on</Text>
+                                    <Text style={styles.headerCell}>Task owner name</Text>
+                                    <Text style={styles.headerCell}>Priority</Text>
+                                </View>
+
+                                {/* Table Data */}
+                                {
+                                    taskList && taskList?.map((task, index) => (
+                                        <TouchableOpacity style={styles.tableRow} key={index} onPress={() => gotoTaskDetail(task)}>
+                                            <Text style={styles.dataCell}>{task.task_name}</Text>
+                                            <Text style={styles.dataCell}>{task.task_description}</Text>
+                                            <Text style={styles.dataCell}>{task.task_scheduledon}</Text>
+                                            <Text style={styles.dataCell}>{task.task_owner_name}</Text>
+                                            <Text style={[styles.dataCell, { backgroundColor: getPriorityColor(task.priority), color: getTextColor(task.priority) }]}>
+                                                {task.priority}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))
+                                }
+
+                                {/* Add more rows as needed */}
                             </View>
-
-                            {/* Table Data */}
-                            {
-                                taskList && taskList?.map((task, index) => (
-                                    <TouchableOpacity style={styles.tableRow} key={index} onPress={() => gotoTaskDetail(task)}>
-                                        <Text style={styles.dataCell}>{task.task_name}</Text>
-                                        <Text style={styles.dataCell}>{task.task_description}</Text>
-                                        <Text style={styles.dataCell}>{task.task_scheduledon}</Text>
-                                        <Text style={styles.dataCell}>{task.task_owner_name}</Text>
-                                        <Text style={[styles.dataCell, { backgroundColor: getPriorityColor(task.priority), color: getTextColor(task.priority) }]}>
-                                            {task.priority}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))
-                            }
-
-                            {/* Add more rows as needed */}
-                        </View>
+                        </ScrollView>
                     </ScrollView>
-                </ScrollView>
+
+                }
+
+
+
 
                 {/* AddTaskModal */}
                 <Modal

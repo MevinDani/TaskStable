@@ -5,9 +5,12 @@ import Login from './components/Login';
 import EmployeeTaskHome from './components/EmployeeTaskHome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TaskDetails from './components/TaskDetails';
+// import { createDrawerNavigator } from '@react-navigation/drawer';
 
 
 const Stack = createNativeStackNavigator();
+
+// const Drawer = createDrawerNavigator()
 
 const MainApp = () => {
 
@@ -34,9 +37,31 @@ const MainApp = () => {
                 ) : null}
                 <Stack.Screen name='EmployeeHome' component={EmployeeTaskHome} options={{ headerShown: false }} />
                 <Stack.Screen name='TaskDetails' component={TaskDetails} options={{ headerShown: false }} />
+                {/* <Stack.Screen
+                    name="SidePanel"
+                    component={SidePanel}
+                    options={{
+                        headerShown: false,
+                        gestureEnabled: true, // Enable gestures for this screen
+                        gestureDirection: 'horizontal', // Set the gesture direction to horizontal
+                    }}
+                /> */}
             </Stack.Navigator>
         </NavigationContainer>
     )
 }
+
+// const SidePanel = () => {
+//     return (
+//         <Drawer.Navigator
+//             drawerPosition="right" // Set the drawer position to right
+//             drawerType="slide" // Set the drawer type to slide
+//         >
+//             <Drawer.Screen name='DrawerScreen1' component={DrawerScreen1} />
+//             <Drawer.Screen name='DrawerScreen2' component={DrawerScreen2} />
+//             {/* Add more screens as needed */}
+//         </Drawer.Navigator>
+//     )
+// }
 
 export default MainApp
