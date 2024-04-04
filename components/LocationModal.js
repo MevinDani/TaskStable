@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { Modal, StyleSheet, Text, View } from 'react-native'
 import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 
+// this file is not being used anywhere !!!
+
 const LocationModal = ({ mapModalVisible }) => {
 
     const [modalVisible, setModalVisible] = useState(mapModalVisible)

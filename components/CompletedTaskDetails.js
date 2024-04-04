@@ -20,7 +20,7 @@ import DocumentPicker from 'react-native-document-picker';
 import ToastManager, { Toast } from 'toastify-react-native'
 
 
-const TaskDetails = () => {
+const CompletedTaskDetails = () => {
     const route = useRoute()
     const { task_id, created_on, task_scheduledon } = route.params;
     const createdDate = created_on.split('T')[0]; // Extract date part
@@ -58,8 +58,6 @@ const TaskDetails = () => {
     const [modifiedImgData, setModifiedImgData] = useState(null)
 
     const [viewImgPop, setImagePoP] = useState(false)
-
-    const [chatBoxView, setChatBoxView] = useState(false)
 
     let currentDate = new Date();
     let formattedDate = currentDate.toISOString().replace("T", " ").replace("Z", "");
@@ -343,7 +341,7 @@ const TaskDetails = () => {
         }
     }
 
-    const imgBaseUrl = "https://cubixweberp.com:186/dummy/";
+    const imgBaseUrl = "https://cubixweberp.com/cubix_taskify/dummy/";
 
     useEffect(() => {
         if (imageApiData) {
@@ -386,7 +384,7 @@ const TaskDetails = () => {
 
     console.log('userAttendanceFromDet', userAttendance)
 
-    console.log('taskData', taskData)
+    // console.log(taskData)
     console.log('taskHistory', taskHistory)
 
     // console.log(allStatusList)
@@ -590,7 +588,7 @@ const TaskDetails = () => {
                                 <View>
                                     <Text style={{
                                         color: 'black'
-                                    }}>select status</Text>
+                                    }}>final status</Text>
                                 </View>
 
                                 <View style={{
@@ -684,7 +682,7 @@ const TaskDetails = () => {
 
                             </View>
 
-                            <View style={{
+                            {/* <View style={{
                                 width: '98%',
                                 padding: 12,
                                 margin: 8,
@@ -772,7 +770,7 @@ const TaskDetails = () => {
                                     }
                                 </View>
 
-                            </View>
+                            </View> */}
                         </>
                     }
 
@@ -886,120 +884,6 @@ const TaskDetails = () => {
 
                 </View>
             </ScrollView>
-            {/* imgPop */}
-            {
-                viewImgPop &&
-
-                <View style={styles.ViewImgModalWrapper}>
-                    <View style={styles.ViewImgModal}>
-
-                        <View style={{
-                            flexDirection: "row",
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            padding: 8
-                        }}>
-                            <Text style={{
-                                padding: 8,
-                                margin: 4,
-                                color: 'black',
-                                fontSize: 18,
-                                fontWeight: 'bold'
-                            }}>File Details</Text>
-
-                            <TouchableOpacity onPress={() => setImagePoP(false)}>
-                                <Image style={{ width: 30, height: 30 }} source={require('../images/closeIcon.png')}></Image>
-                            </TouchableOpacity>
-                        </View>
-
-                        <ScrollView vertical={true}>
-                            <View style={{
-                                flexDirection: 'row',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                flexWrap: 'wrap',
-                                marginTop: 12,
-                                marginBottom: 12
-                            }}>
-
-                                {
-                                    modifiedImgData && modifiedImgData.map((item, index) => (
-                                        <View style={{
-                                            width: '40%',
-                                            margin: 4,
-                                            justifyContent: "center",
-                                            alignItems: 'center',
-
-                                            // borderColor: 'red',
-                                            // borderWidth: 2
-                                        }} key={index}>
-                                            <Image source={{ uri: item.Imagepath }} style={{ width: '100%', height: 200, }}></Image>
-                                            <Text>{item.Description ? item.Description : ""}</Text>
-                                        </View>
-                                    ))
-                                }
-
-                            </View>
-                        </ScrollView>
-
-
-                    </View>
-                </View>
-            }
-
-            <View style={styles.ChatIcon}>
-                <TouchableOpacity onPress={() => setChatBoxView(true)}>
-                    <Image source={require('../images/chatIcon.png')} style={{ width: 50, height: 50 }}></Image>
-                </TouchableOpacity>
-            </View>
-
-            {
-                chatBoxView &&
-
-                <View style={styles.ViewImgModalWrapper}>
-                    <View style={styles.ViewImgModal}>
-
-                        <View style={{
-                            flexDirection: "row",
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            padding: 8
-                        }}>
-                            <Text style={{
-                                padding: 8,
-                                margin: 4,
-                                color: 'black',
-                                fontSize: 18,
-                                fontWeight: 'bold'
-                            }}>Chat</Text>
-
-                            <TouchableOpacity onPress={() => setChatBoxView(false)}>
-                                <Image style={{ width: 30, height: 30 }} source={require('../images/closeIcon.png')}></Image>
-                            </TouchableOpacity>
-                        </View>
-
-                        <ScrollView vertical={true} style={{
-                            padding: 8
-                        }}>
-                            <View style={{
-                                backgroundColor: "#F3F3F3",
-                                minHeight: 500,
-                                padding: 12
-                            }}>
-
-                                <View style={[styles.inputContainer]}>
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder=''
-                                    // onChangeText={text => setStatusDescription(text)}
-                                    // value={statusDescription}
-                                    />
-                                </View>
-                            </View>
-                        </ScrollView>
-                    </View>
-                </View>
-            }
 
         </SafeAreaView >
     )
@@ -1068,12 +952,7 @@ const styles = StyleSheet.create({
         width: '90%',
         height: '70%',
         borderRadius: 8
-    },
-    ChatIcon: {
-        position: 'absolute',
-        right: 15,
-        bottom: 15
     }
 })
 
-export default TaskDetails
+export default CompletedTaskDetails

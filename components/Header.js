@@ -1,9 +1,13 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, Modal } from 'react-native'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { useNavigation } from '@react-navigation/native'
+import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native'
 
 const Header = () => {
+    const navigation = useNavigation();
+
+    const isFocused = useIsFocused();
+    const route = useRoute();
 
     const [showSidePanel, setShowSidePanel] = useState(false)
 
@@ -13,6 +17,12 @@ const Header = () => {
         setShowSidePanel(!showSidePanel);
     };
 
+    useEffect(() => {
+        if (isFocused && route.name === 'EmployeeHome') {
+            setShowSidePanel(false);
+            // setshowLogoutPoP(false);
+        }
+    }, [isFocused]);
 
     // // // Function to get all data from AsyncStorage
     // const getAllDataFromAsyncStorage = async () => {
@@ -39,7 +49,6 @@ const Header = () => {
     // // Call the function to get all data from AsyncStorage
     // getAllDataFromAsyncStorage();
 
-    const navigation = useNavigation();
 
     const handleLogOut = async () => {
 
@@ -84,14 +93,26 @@ const Header = () => {
                     </TouchableOpacity>
 
                     <View style={styles.sidePanelRight}>
-                        <View style={{
-                            padding: 8,
-                            margin: 4,
-                        }}>
-                            <Text style={{
-                                fontWeight: 'bold'
-                            }}>My completed Tasks</Text>
-                        </View>
+                        <TouchableOpacity onPress={() => navigation.navigate('EmployeeHome')}>
+                            <View style={{
+                                padding: 8,
+                                margin: 4,
+                            }}>
+                                <Text style={{
+                                    fontWeight: 'bold'
+                                }}>Home</Text>
+                            </View>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => navigation.navigate('CompletedTask')}>
+                            <View style={{
+                                padding: 8,
+                                margin: 4,
+                            }}>
+                                <Text style={{
+                                    fontWeight: 'bold'
+                                }}>My completed Tasks</Text>
+                            </View>
+                        </TouchableOpacity>
                         <TouchableOpacity style={{
                             padding: 8,
                             margin: 4,

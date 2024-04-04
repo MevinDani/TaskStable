@@ -5,6 +5,8 @@ import Login from './components/Login';
 import EmployeeTaskHome from './components/EmployeeTaskHome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TaskDetails from './components/TaskDetails';
+import CompletedTask from './components/CompletedTask';
+import CompletedTaskDetails from './components/CompletedTaskDetails';
 // import { createDrawerNavigator } from '@react-navigation/drawer';
 
 
@@ -37,6 +39,8 @@ const MainApp = () => {
                 ) : null}
                 <Stack.Screen name='EmployeeHome' component={EmployeeTaskHome} options={{ headerShown: false }} />
                 <Stack.Screen name='TaskDetails' component={TaskDetails} options={{ headerShown: false }} />
+                <Stack.Screen name='CompletedTask' component={CompletedTask} options={{ headerShown: false }} />
+                <Stack.Screen name='CompletedTaskDetails' component={CompletedTaskDetails} options={{ headerShown: false }} />
                 {/* <Stack.Screen
                     name="SidePanel"
                     component={SidePanel}

@@ -10,6 +10,9 @@ import TravelEnd from '../images/travel_end_in_path.png'
 import TaskStart from '../images/task_start_in_path.png'
 import TaskEnd from '../images/task_end.png'
 
+// this file is not being used anywhere !!!
+
+
 const TaskManagerHome = () => {
 
     const [activeOption, setActiveOption] = useState('All');
