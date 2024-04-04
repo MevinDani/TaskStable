@@ -57,7 +57,8 @@ const Header = () => {
             await AsyncStorage.removeItem('userData');
 
             // Navigate to the login page
-            navigation.navigate('Login');
+            navigation.navigate('LoginPage');
+            setshowLogoutPoP(false)
         } catch (error) {
             console.error("Error logging out:", error);
             // Handle error if necessary

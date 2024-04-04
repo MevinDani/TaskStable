@@ -845,7 +845,7 @@ const CompletedTaskDetails = () => {
                                                 left: -42,
                                                 top: 20
                                             }}>
-                                                <Image source={getImageForStatus(history.task_status)}></Image>
+                                                <Image style={history.task_status === 'COMPLETED' ? { width: 40, height: 40 } : null} source={getImageForStatus(history.task_status)}></Image>
                                             </View>
                                             <View style={{
                                                 marginLeft: 10,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { SafeAreaView, StyleSheet, View, TextInput, TouchableOpacity, Text, Image, KeyboardAvoidingView, ActivityIndicator } from 'react-native'
 import LinearGradient from 'react-native-linear-gradient';
 import footerBg from '../images/footer_bg.png'
@@ -19,7 +19,7 @@ const Login = () => {
     const navigation = useNavigation()
 
     const showLoginSuccessToast = () => {
-        Toast.success(`wlecome, ${userId}`)
+        Toast.success(`welcome, ${userId}`)
     }
 
     const showLoginFailedToast = () => {
@@ -29,6 +29,25 @@ const Login = () => {
     const showFormEmptyToast = () => {
         Toast.error('UserId and Password cant be empty')
     }
+
+    const [userDataExists, setUserDataExists] = useState(false);
+
+    useEffect(() => {
+        const checkUserData = async () => {
+            try {
+                const userDataJson = await AsyncStorage.getItem('userData');
+                const userData = JSON.parse(userDataJson);
+                setUserDataExists(userData !== null);
+                if (userData !== null) {
+                    navigation.navigate('EmployeeHome')
+                }
+            } catch (error) {
+                console.error('Error checking user data:', error);
+            }
+        };
+        checkUserData();
+    }, []);
+
 
     const handleLogin = async () => {
         // Here you can implement your login logic

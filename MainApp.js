@@ -34,9 +34,10 @@ const MainApp = () => {
     return (
         <NavigationContainer>
             <Stack.Navigator>
-                {!userDataExists ? (
+                {/* {!userDataExists ? (
                     <Stack.Screen name='Login' component={Login} options={{ headerShown: false }} />
-                ) : null}
+                ) : null} */}
+                <Stack.Screen name='LoginPage' component={Login} options={{ headerShown: false }} />
                 <Stack.Screen name='EmployeeHome' component={EmployeeTaskHome} options={{ headerShown: false }} />
                 <Stack.Screen name='TaskDetails' component={TaskDetails} options={{ headerShown: false }} />
                 <Stack.Screen name='CompletedTask' component={CompletedTask} options={{ headerShown: false }} />

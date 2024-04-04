@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { SafeAreaView, View, Text, StyleSheet, Image, TouchableOpacity, ImageBackground, TextInput, ScrollView } from 'react-native'
+import { SafeAreaView, View, Text, StyleSheet, Image, TouchableOpacity, ImageBackground, TextInput, ScrollView, ActivityIndicator } from 'react-native'
 import userAvt from '../images/userAvt.png'
 import ViewJobList from '../images/ic_view_job_list.png'
 import TaskOpen from '../images/task_open.png'
@@ -65,6 +65,8 @@ const TaskDetails = () => {
 
     const [chatData, setChatData] = useState(null)
 
+    const [uploadLoader, setUploadLoader] = useState(false)
+
     let currentDate = new Date();
     let formattedDate = currentDate.toISOString().replace("T", " ").replace("Z", "");
 
@@ -128,14 +130,16 @@ const TaskDetails = () => {
     }, [task_id])
 
     useEffect(() => {
-        if (taskHistory) {
+        if (taskHistory && taskHistory.length > 0 && taskHistory[0].hasOwnProperty('name_of_file_uploaded')) {
             if (taskHistory[0].name_of_file_uploaded === 'Y') {
-                setViewImage(true)
+                setViewImage(true);
             } else {
-                setViewImage(false)
+                setViewImage(false);
             }
+        } else {
+            setViewImage(false);
         }
-    }, [taskHistory])
+    }, [taskHistory]);
 
     useEffect(() => {
         const fetchStatusListAll = async () => {
@@ -295,6 +299,7 @@ const TaskDetails = () => {
     };
 
     const handleUpload = async () => {
+        setUploadLoader(true)
         try {
             // Create FormData object
             const formData = new FormData();
@@ -328,6 +333,7 @@ const TaskDetails = () => {
                 setSelectedFile(null)
                 showFileUploadToast()
                 fetchHistoryData()
+                setUploadLoader(false)
             }
         } catch (error) {
             console.error('Upload error:', error);
@@ -678,7 +684,7 @@ const TaskDetails = () => {
                                                             height: "auto"
                                                         }}
                                                     >
-                                                        <Image style={{ width: 25, height: 25, marginRight: 12 }} source={getImageForStatus(status)}></Image>
+                                                        <Image source={getImageForStatus(status)}></Image>
                                                         <Text style={{ color: selectedStatus === status ? 'white' : 'black' }}>{status}</Text>
                                                     </TouchableOpacity>
                                                 ))
@@ -813,19 +819,24 @@ const TaskDetails = () => {
                                     </View>
                                     {
                                         selectedFile && fileDescription &&
-                                        <TouchableOpacity onPress={handleUpload} style={{
-                                            width: '20%',
-                                            margin: 4,
-                                            color: 'white',
-                                            backgroundColor: '#FFC107',
-                                            padding: 8,
-                                            borderRadius: 4
-                                        }}>
-                                            <Text style={{
-                                                color: 'black',
-                                                fontSize: 15
-                                            }}>Upload</Text>
-                                        </TouchableOpacity>
+                                        <>
+                                            {
+                                                uploadLoader ? <ActivityIndicator size="large" color="green"></ActivityIndicator> :
+                                                    <TouchableOpacity onPress={handleUpload} style={{
+                                                        width: '20%',
+                                                        margin: 4,
+                                                        color: 'white',
+                                                        backgroundColor: '#FFC107',
+                                                        padding: 8,
+                                                        borderRadius: 4
+                                                    }}>
+                                                        <Text style={{
+                                                            color: 'black',
+                                                            fontSize: 15
+                                                        }}>Upload</Text>
+                                                    </TouchableOpacity>
+                                            }
+                                        </>
 
                                     }
                                 </View>
