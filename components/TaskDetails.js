@@ -61,10 +61,14 @@ const TaskDetails = () => {
 
     const [chatBoxView, setChatBoxView] = useState(false)
 
+    const [chatMsg, setChatMsg] = useState('')
+
+    const [chatData, setChatData] = useState(null)
+
     let currentDate = new Date();
     let formattedDate = currentDate.toISOString().replace("T", " ").replace("Z", "");
 
-    // console.log(formattedDate);
+    // console.log('formattedDate', formattedDate);
 
 
 
@@ -79,7 +83,7 @@ const TaskDetails = () => {
                 const userData = JSON.parse(userDataJson);
                 // Now you have userData, you can use it here
                 setUserData(userData)
-                console.log('userData', userData)
+                // console.log('userData', userData)
 
             } catch (error) {
                 console.error('Error fetching user data:', error);
@@ -171,7 +175,7 @@ const TaskDetails = () => {
 
     // console.log('statusArray', statusArray)
 
-    console.log('userData', userData)
+    // console.log('userData', userData)
 
     // taskstatusSave
     const taskStatusSave = async () => {
@@ -330,6 +334,60 @@ const TaskDetails = () => {
         }
     };
 
+    // fetchPrevMsg
+    const fetchPrevMessage = async () => {
+        try {
+            const response = await axios.get(`https://cubixweberp.com:156/api/CRMTaskChatList/cpays/${taskHistory[0].task_id}`)
+            // console.log(response)
+            if (response.status === 200) {
+                setChatData(response.data)
+            }
+        } catch (error) {
+            console.error('fetchPrevMessageErr:', error);
+        }
+    }
+
+    console.log('chatData', chatData)
+
+    useEffect(() => {
+        if (taskHistory) {
+            fetchPrevMessage()
+        }
+    }, [taskHistory])
+
+    // send msg
+
+    const sendMsg = async () => {
+        setChatMsg('')
+        let msgData = [
+            {
+                cmpcode: 'CPAYS',
+                mode: 'ENTRY',
+                task_id: taskHistory[0].task_id,
+                chat_message: chatMsg,
+                task_ownder_id: taskHistory[0].task_owner_id,
+                created_on: formattedDate,
+                status: "n"
+            }
+        ]
+
+        let stringifiedJson = JSON.stringify(msgData)
+        console.log('stringifiedJson', stringifiedJson)
+        try {
+            const response = await axios.post(`https://cubixweberp.com:156/api/CRMTaskChat`, stringifiedJson, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            console.log(response)
+            fetchPrevMessage()
+            // if (response) {
+            // }
+        } catch (error) {
+            console.error('chat error:', error);
+        }
+    }
+
     const getImage = async () => {
         setImagePoP(true)
         if (taskHistory) {
@@ -384,10 +442,10 @@ const TaskDetails = () => {
     }, [taskData]);
 
 
-    console.log('userAttendanceFromDet', userAttendance)
+    // console.log('userAttendanceFromDet', userAttendance)
 
-    console.log('taskData', taskData)
-    console.log('taskHistory', taskHistory)
+    // console.log('taskData', taskData)
+    // console.log('taskHistory', taskHistory)
 
     // console.log(allStatusList)
 
@@ -984,19 +1042,54 @@ const TaskDetails = () => {
                             <View style={{
                                 backgroundColor: "#F3F3F3",
                                 minHeight: 500,
-                                padding: 12
+                                padding: 12,
                             }}>
-
-                                <View style={[styles.inputContainer]}>
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder=''
-                                    // onChangeText={text => setStatusDescription(text)}
-                                    // value={statusDescription}
-                                    />
-                                </View>
+                                {
+                                    chatData && chatData.map((chat, index) => (
+                                        <View style={{
+                                            width: '100%',
+                                            justifyContent: chat.user_id === userData.empid ? 'flex-end' : 'flex-start',
+                                            flexDirection: 'row'
+                                        }} key={index}>
+                                            <View style={{
+                                                backgroundColor: 'white',
+                                                padding: 12,
+                                                margin: 8
+                                            }}>
+                                                <Text style={{ color: 'black' }}>{chat.chat_message}</Text>
+                                            </View>
+                                        </View>
+                                    ))
+                                }
                             </View>
                         </ScrollView>
+                        <View style={[styles.inputContainer]}>
+                            <View style={{
+                                padding: 8,
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                alignItems: 'center'
+                            }}>
+                                <TextInput
+                                    // style={[styles.input, { backgroundColor: '#E0FFFF' }]}
+                                    style={{ backgroundColor: '#E0FFFF', width: '80%' }}
+                                    placeholder='Type a message'
+                                    onChangeText={text => setChatMsg(text)}
+                                    value={chatMsg}
+                                />
+                                {
+                                    chatMsg !== '' &&
+                                    <TouchableOpacity onPress={sendMsg} style={{
+                                        padding: 8,
+                                        borderRadius: 4,
+                                        backgroundColor: '#0D6EFD'
+                                    }}>
+                                        <Text style={{ color: 'white' }}>Send</Text>
+                                    </TouchableOpacity>
+
+                                }
+                            </View>
+                        </View>
                     </View>
                 </View>
             }

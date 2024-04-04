@@ -1,6 +1,6 @@
 import axios from 'axios'
 import React, { useEffect, useState } from 'react'
-import { Image, ImageBackground, SafeAreaView, StyleSheet, Text, View, TouchableOpacity, ScrollView, Modal, TextInput, Button, Dimensions } from 'react-native'
+import { Image, ImageBackground, SafeAreaView, StyleSheet, Text, View, TouchableOpacity, ScrollView, Modal, TextInput, Button, Dimensions, ActivityIndicator } from 'react-native'
 import DateTimePicker from '@react-native-community/datetimepicker';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import ToastManager, { Toast } from 'toastify-react-native'
@@ -13,7 +13,6 @@ import { Linking } from 'react-native';
 import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Header from './Header';
-
 
 // Get the device's screen dimensions
 const { width, height } = Dimensions.get('window');
@@ -49,6 +48,8 @@ const CompletedTask = () => {
 
     const [checkInOutText, setCheckInOut] = useState('')
 
+    const [loading, setLoading] = useState(false)
+
     const [mapRegion, setMapRegion] = useState({
         latitude: 0,
         longitude: 0,
@@ -78,11 +79,13 @@ const CompletedTask = () => {
     }
 
     const fetchData = async () => {
+        setLoading(true)
         try {
             const response = await axios.get(`https://cubixweberp.com:156/api/CRMTaskMainList/CPAYS/owner_completed/${empId}/-/-/-/-/2024-01-10/2024-03-28/-`);
             // const response = await axios.get(`https://cubixweberp.com:156/api/CRMTaskMainList/CPAYS/owner/AJMAL/-/-/-/-/2024-01-10/2024-12-28/-`);
             setTaskList(response.data);
             console.log('fetchData')
+            setLoading(false)
         } catch (error) {
             console.log(error, 'getTaskListError')
         }
@@ -719,6 +722,13 @@ const CompletedTask = () => {
                                 <Text style={styles.headerCell}>Task owner name</Text>
                                 <Text style={styles.headerCell}>Priority</Text>
                             </View>
+
+                            {
+                                loading &&
+                                <View style={{ width: '100%', justifyContent: 'flex-start', alignItems: 'flex-start' }}>
+                                    <View style={{ marginLeft: 34 }}><ActivityIndicator size="large" color="blue"></ActivityIndicator></View>
+                                </View>
+                            }
 
                             {/* Table Data */}
                             {

@@ -49,6 +49,12 @@ const EmployeeTaskHome = () => {
 
     const [checkInOutText, setCheckInOut] = useState('')
 
+    const [projectList, setProjectList] = useState(null)
+
+    const [showProject, setShowProject] = useState(false)
+
+    const [selectedProject, setSelectedProject] = useState('')
+
     const [mapRegion, setMapRegion] = useState({
         latitude: 0,
         longitude: 0,
@@ -259,7 +265,7 @@ const EmployeeTaskHome = () => {
 
     const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
     const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
-    
+
     const [date, setDate] = useState('')
     const [time, setTime] = useState('')
 
@@ -434,6 +440,27 @@ const EmployeeTaskHome = () => {
             showEmptyTaskFields()
         }
     };
+
+    useEffect(() => {
+        const fetchProjectList = async () => {
+            try {
+                const response = await axios.get(`https://cubixweberp.com:156/api/CRMProjectList/CPAYS/-`)
+                setProjectList(response.data)
+            } catch (error) {
+                console.log('projectListErr', error)
+            }
+        }
+        fetchProjectList()
+    }, [])
+
+    useEffect(() => {
+        if (taskComesUnder === 'Project') {
+            setShowProject(true)
+        } else {
+            setShowProject(false)
+            setSelectedProject('')
+        }
+    }, [taskComesUnder])
 
     useEffect(() => {
         if (modalVisible === false) {
@@ -836,6 +863,43 @@ const EmployeeTaskHome = () => {
                                     <Text style={{ color: 'white', marginLeft: 12 }}>Project</Text>
                                 </TouchableOpacity>
                             </View>
+
+                            {
+                                selectedProject !== '' &&
+
+                                <View style={{ margin: 2, width: '100%' }}>
+                                    <Text>{selectedProject}</Text>
+                                </View>
+
+                            }
+
+                            {
+                                showProject &&
+
+                                <View style={{
+                                    width: '100%',
+                                    marginBottom: 4
+                                }}>
+                                    <View>
+                                        {
+                                            projectList && projectList.map((item, index) => (
+                                                <ScrollView key={index} vertical={true}>
+                                                    <TouchableOpacity onPress={() => setSelectedProject(item.Description)}>
+                                                        <Text style={{
+                                                            backgroundColor: 'white',
+                                                            color: 'black',
+                                                            padding: 4,
+                                                            paddingTop: 8,
+                                                            paddingBottom: 8,
+                                                            margin: 2
+                                                        }}>{item.Description}</Text>
+                                                    </TouchableOpacity>
+                                                </ScrollView>
+                                            ))
+                                        }
+                                    </View>
+                                </View>
+                            }
 
                             <View style={{
                                 textAlign: 'left',
