@@ -76,9 +76,11 @@ const Header = () => {
 
                 {/* HeaderNav */}
                 <View style={styles.THHeaderNav}>
-                    <View>
-                        <Image source={require('../images/xpertLogo.png')} style={{ height: 40, width: 120 }}></Image>
-                    </View>
+                    <TouchableOpacity onPress={() => navigation.navigate('EmployeeHome')}>
+                        <View>
+                            <Image source={require('../images/xpertLogo.png')} style={{ height: 40, width: 120 }}></Image>
+                        </View>
+                    </TouchableOpacity>
                     <TouchableOpacity onPress={toggleSidePanel} style={styles.hamburgerButton}>
                         <Image source={require('../images/ic_hamburger.png')}></Image>
                     </TouchableOpacity>

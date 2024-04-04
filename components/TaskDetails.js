@@ -524,7 +524,7 @@ const TaskDetails = () => {
 
                     <View style={{
                         flexDirection: 'row',
-                        justifyContent: 'space-between',
+                        justifyContent: 'center',
                         flexWrap: 'wrap',
                         backgroundColor: 'white'
                     }}>
@@ -535,8 +535,8 @@ const TaskDetails = () => {
                             paddingHorizontal: 8,
                             paddingVertical: 14,
                             margin: 4,
-                            // borderColor: 'gray', // Border color
-                            // borderWidth: 1, // Border width
+                            borderColor: 'gray', // Border color
+                            borderWidth: 1, // Border width
                             shadowColor: "black",
                             shadowOffset: {
                                 width: 0,
@@ -557,8 +557,8 @@ const TaskDetails = () => {
                             paddingHorizontal: 8,
                             paddingVertical: 14,
                             margin: 4,
-                            // borderColor: 'gray', // Border color
-                            // borderWidth: 1, // Border width
+                            borderColor: 'gray', // Border color
+                            borderWidth: 1, // Border width
                             shadowColor: "black",
                             shadowOffset: {
                                 width: 0,
@@ -578,8 +578,8 @@ const TaskDetails = () => {
                             paddingHorizontal: 8,
                             paddingVertical: 14,
                             margin: 4,
-                            // borderColor: 'gray', // Border color
-                            // borderWidth: 1, // Border width
+                            borderColor: 'gray', // Border color
+                            borderWidth: 1, // Border width
                             shadowColor: "black",
                             shadowOffset: {
                                 width: 0,
@@ -599,8 +599,8 @@ const TaskDetails = () => {
                             paddingHorizontal: 8,
                             paddingVertical: 14,
                             margin: 4,
-                            // borderColor: 'gray', // Border color
-                            // borderWidth: 1, // Border width
+                            borderColor: 'gray', // Border color
+                            borderWidth: 1, // Border width
                             shadowColor: "black",
                             shadowOffset: {
                                 width: 0,
@@ -620,8 +620,8 @@ const TaskDetails = () => {
                             paddingHorizontal: 8,
                             paddingVertical: 14,
                             margin: 4,
-                            // borderColor: 'gray', // Border color
-                            // borderWidth: 1, // Border width
+                            borderColor: 'gray', // Border color
+                            borderWidth: 1, // Border width
                             shadowColor: "black",
                             shadowOffset: {
                                 width: 0,
@@ -684,7 +684,7 @@ const TaskDetails = () => {
                                                             height: "auto"
                                                         }}
                                                     >
-                                                        <Image source={getImageForStatus(status)}></Image>
+                                                        <Image style={status === 'COMPLETED' ? { width: 40, height: 40 } : null} source={getImageForStatus(status)}></Image>
                                                         <Text style={{ color: selectedStatus === status ? 'white' : 'black' }}>{status}</Text>
                                                     </TouchableOpacity>
                                                 ))
@@ -1063,7 +1063,7 @@ const TaskDetails = () => {
                                             flexDirection: 'row'
                                         }} key={index}>
                                             <View style={{
-                                                backgroundColor: 'white',
+                                                backgroundColor: chat.user_id === userData.empid ? 'white' : '#F0F8FF',
                                                 padding: 12,
                                                 margin: 8
                                             }}>
@@ -1083,7 +1083,7 @@ const TaskDetails = () => {
                             }}>
                                 <TextInput
                                     // style={[styles.input, { backgroundColor: '#E0FFFF' }]}
-                                    style={{ backgroundColor: '#E0FFFF', width: '80%' }}
+                                    style={{ backgroundColor: '#E0FFFF', width: chatMsg !== '' ? '80%' : '100%' }}
                                     placeholder='Type a message'
                                     onChangeText={text => setChatMsg(text)}
                                     value={chatMsg}

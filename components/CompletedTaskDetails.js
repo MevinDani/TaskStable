@@ -458,7 +458,7 @@ const CompletedTaskDetails = () => {
 
                     <View style={{
                         flexDirection: 'row',
-                        justifyContent: 'space-between',
+                        justifyContent: 'center',
                         flexWrap: 'wrap',
                         backgroundColor: 'white'
                     }}>
@@ -469,8 +469,8 @@ const CompletedTaskDetails = () => {
                             paddingHorizontal: 8,
                             paddingVertical: 14,
                             margin: 4,
-                            // borderColor: 'gray', // Border color
-                            // borderWidth: 1, // Border width
+                            borderColor: 'gray', // Border color
+                            borderWidth: 1, // Border width
                             shadowColor: "black",
                             shadowOffset: {
                                 width: 0,
@@ -491,8 +491,8 @@ const CompletedTaskDetails = () => {
                             paddingHorizontal: 8,
                             paddingVertical: 14,
                             margin: 4,
-                            // borderColor: 'gray', // Border color
-                            // borderWidth: 1, // Border width
+                            borderColor: 'gray', // Border color
+                            borderWidth: 1, // Border width
                             shadowColor: "black",
                             shadowOffset: {
                                 width: 0,
@@ -512,8 +512,8 @@ const CompletedTaskDetails = () => {
                             paddingHorizontal: 8,
                             paddingVertical: 14,
                             margin: 4,
-                            // borderColor: 'gray', // Border color
-                            // borderWidth: 1, // Border width
+                            borderColor: 'gray', // Border color
+                            borderWidth: 1, // Border width
                             shadowColor: "black",
                             shadowOffset: {
                                 width: 0,
@@ -533,8 +533,8 @@ const CompletedTaskDetails = () => {
                             paddingHorizontal: 8,
                             paddingVertical: 14,
                             margin: 4,
-                            // borderColor: 'gray', // Border color
-                            // borderWidth: 1, // Border width
+                            borderColor: 'gray', // Border color
+                            borderWidth: 1, // Border width
                             shadowColor: "black",
                             shadowOffset: {
                                 width: 0,
@@ -554,8 +554,8 @@ const CompletedTaskDetails = () => {
                             paddingHorizontal: 8,
                             paddingVertical: 14,
                             margin: 4,
-                            // borderColor: 'gray', // Border color
-                            // borderWidth: 1, // Border width
+                            borderColor: 'gray', // Border color
+                            borderWidth: 1, // Border width
                             shadowColor: "black",
                             shadowOffset: {
                                 width: 0,
