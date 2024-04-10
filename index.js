@@ -12,5 +12,9 @@ import Login from './components/Login';
 import EmployeeTaskHome from './components/EmployeeTaskHome';
 import MainApp from './MainApp';
 import LocationModal from './components/LocationModal';
+import Test from './components/Test';
+import Test2 from './components/Test2';
+import Doughnut from './components/Doughnut';
+import StackedChart from './components/StackedChart';
 
 AppRegistry.registerComponent(appName, () => MainApp);

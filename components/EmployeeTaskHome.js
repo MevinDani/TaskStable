@@ -1,6 +1,6 @@
 import axios from 'axios'
 import React, { useEffect, useState } from 'react'
-import { Image, ImageBackground, SafeAreaView, StyleSheet, Text, View, TouchableOpacity, ScrollView, Modal, TextInput, Button, Dimensions } from 'react-native'
+import { Image, ImageBackground, SafeAreaView, StyleSheet, Text, View, TouchableOpacity, ScrollView, Modal, TextInput, Button, Dimensions, ActivityIndicator } from 'react-native'
 import DateTimePicker from '@react-native-community/datetimepicker';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import ToastManager, { Toast } from 'toastify-react-native'
@@ -13,6 +13,7 @@ import { Linking } from 'react-native';
 import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Header from './Header';
+import DoughnutChart from './Test2';
 
 
 // Get the device's screen dimensions
@@ -653,59 +654,45 @@ const EmployeeTaskHome = () => {
                 </View> */}
                 <Header />
 
-                {/* UserBanner */}
-                <ImageBackground source={require('../images/header_background.png')} style={{
-                    width: "100%",
-                    marginTop: 12,
-                    // paddingVertical: 24,
-                    height: 110,
-                    display: "flex",
-                    justifyContent: "flex-end"
-                    // paddingHorizontal: 0
-                }}>
-                    <View style={styles.THUserBanner}>
-                        <View><Text style={{ fontWeight: "bold", fontSize: 20, color: "black" }}>{empId && empId}</Text></View>
-                        <TouchableOpacity style={styles.button} onPress={() => setMapModalVisible(!mapModalVisible)}>
-                            {/* <TouchableOpacity style={styles.button} onPress={() => requestLocationPermission()}> */}
-                            <Image source={require('../images/location.png')} style={{
-                                width: 16,
-                                height: 16,
-                            }}></Image>
-                            <Text style={styles.buttonText}>{checkInOutText}</Text>
-                        </TouchableOpacity>
-                    </View>
-                </ImageBackground>
-
-                {
-                    checkInOutText === 'CHECKIN' &&
-
-                    <View style={{
-                        margin: 8
+                <ScrollView>
+                    {/* UserBanner */}
+                    <ImageBackground source={require('../images/header_background.png')} style={{
+                        width: "100%",
+                        marginTop: 12,
+                        // paddingVertical: 24,
+                        height: 110,
+                        display: "flex",
+                        justifyContent: "flex-end"
+                        // paddingHorizontal: 0
                     }}>
-                        <Text style={{
-                            color: 'red',
-                            fontWeight: 'bold'
-                        }}>You need to check in to update tasks</Text>
-                    </View>
-                }
+                        <View style={styles.THUserBanner}>
+                            <View><Text style={{ fontWeight: "bold", fontSize: 20, color: "black" }}>{empId && empId}</Text></View>
+                            <TouchableOpacity style={styles.button} onPress={() => setMapModalVisible(!mapModalVisible)}>
+                                {/* <TouchableOpacity style={styles.button} onPress={() => requestLocationPermission()}> */}
+                                <Image source={require('../images/location.png')} style={{
+                                    width: 16,
+                                    height: 16,
+                                }}></Image>
+                                <Text style={styles.buttonText}>{checkInOutText}</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </ImageBackground>
 
-                {/* Add button */}
+                    {
+                        checkInOutText === 'CHECKIN' &&
 
-                <View style={styles.AddButton}>
-                    <TouchableOpacity style={styles.buttonAdd} onPress={() => setModalVisible(true)}>
-                        <Image source={require('../images/addB.png')} style={{
-                            width: 25,
-                            height: 20,
-                        }}></Image>
-                        <Text style={{
-                            fontSize: 16,
-                            color: "black"
-                        }}>Add Task</Text>
-                    </TouchableOpacity>
-                </View>
+                        <View style={{
+                            margin: 8
+                        }}>
+                            <Text style={{
+                                color: 'red',
+                                fontWeight: 'bold'
+                            }}>You need to check in to update tasks</Text>
+                        </View>
+                    }
 
-                {/* {
-                    checkInOutText === 'CHECKOUT' &&
+                    {/* Add button */}
+
                     <View style={styles.AddButton}>
                         <TouchableOpacity style={styles.buttonAdd} onPress={() => setModalVisible(true)}>
                             <Image source={require('../images/addB.png')} style={{
@@ -718,51 +705,32 @@ const EmployeeTaskHome = () => {
                             }}>Add Task</Text>
                         </TouchableOpacity>
                     </View>
-                } */}
 
-                {/* TaskTable */}
-                <ScrollView vertical={true} style={{
-                    marginTop: 8
-                }}>
-                    <ScrollView horizontal={true}>
-                        <View style={styles.TableContainer}>
-                            {/* Table Header */}
-                            <View style={styles.tableRow}>
-                                <Text style={styles.headerCell}>Name</Text>
-                                <Text style={styles.headerCell}>Description</Text>
-                                <Text style={styles.headerCell}>Scheduled on</Text>
-                                <Text style={styles.headerCell}>Task owner name</Text>
-                                <Text style={styles.headerCell}>Priority</Text>
-                            </View>
-
-                            {/* Table Data */}
-                            {
-                                taskList && taskList?.map((task, index) => (
-                                    <TouchableOpacity style={styles.tableRow} key={index} onPress={() => gotoTaskDetail(task)}>
-                                        <Text style={styles.dataCell}>{task.task_name}</Text>
-                                        <Text style={styles.dataCell}>{task.task_description}</Text>
-                                        <Text style={styles.dataCell}>{task.task_scheduledon}</Text>
-                                        <Text style={styles.dataCell}>{task.task_owner_name}</Text>
-                                        <Text style={[styles.dataCell, { backgroundColor: getPriorityColor(task.priority), color: getTextColor(task.priority) }]}>
-                                            {task.priority}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))
-                            }
-
-                            {/* Add more rows as needed */}
+                    {/* {
+                        checkInOutText === 'CHECKOUT' &&
+                        <View style={styles.AddButton}>
+                            <TouchableOpacity style={styles.buttonAdd} onPress={() => setModalVisible(true)}>
+                                <Image source={require('../images/addB.png')} style={{
+                                    width: 25,
+                                    height: 20,
+                                }}></Image>
+                                <Text style={{
+                                    fontSize: 16,
+                                    color: "black"
+                                }}>Add Task</Text>
+                            </TouchableOpacity>
                         </View>
-                    </ScrollView>
-                </ScrollView>
+                    } */}
 
-                {/* {
-                    checkInOutText === 'CHECKOUT' &&
-
-                    <ScrollView vertical={true} style={{
-                        marginTop: 8
+                    {/* TaskTable */}
+                    <View style={{
+                        marginTop: 8,
+                        height: 500,
+                        marginBottom: 16
                     }}>
                         <ScrollView horizontal={true}>
                             <View style={styles.TableContainer}>
+                                {/* Table Header */}
                                 <View style={styles.tableRow}>
                                     <Text style={styles.headerCell}>Name</Text>
                                     <Text style={styles.headerCell}>Description</Text>
@@ -772,26 +740,76 @@ const EmployeeTaskHome = () => {
                                 </View>
 
                                 {
-                                    taskList && taskList?.map((task, index) => (
-                                        <TouchableOpacity style={styles.tableRow} key={index} onPress={() => gotoTaskDetail(task)}>
-                                            <Text style={styles.dataCell}>{task.task_name}</Text>
-                                            <Text style={styles.dataCell}>{task.task_description}</Text>
-                                            <Text style={styles.dataCell}>{task.task_scheduledon}</Text>
-                                            <Text style={styles.dataCell}>{task.task_owner_name}</Text>
-                                            <Text style={[styles.dataCell, { backgroundColor: getPriorityColor(task.priority), color: getTextColor(task.priority) }]}>
-                                                {task.priority}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))
+                                    taskList === null &&
+                                    <ActivityIndicator color='blue' size='large'></ActivityIndicator>
                                 }
 
+                                <ScrollView vertical={true} nestedScrollEnabled={true}>
+                                    {/* Table Data */}
+                                    {
+                                        taskList && taskList?.map((task, index) => (
+                                            <TouchableOpacity style={styles.tableRow} key={index} onPress={() => gotoTaskDetail(task)}>
+                                                <Text style={styles.dataCell}>{task.task_name}</Text>
+                                                <Text style={styles.dataCell}>{task.task_description}</Text>
+                                                <Text style={styles.dataCell}>{task.task_scheduledon}</Text>
+                                                <Text style={styles.dataCell}>{task.task_owner_name}</Text>
+                                                <Text style={[styles.dataCell, { backgroundColor: getPriorityColor(task.priority), color: getTextColor(task.priority) }]}>
+                                                    {task.priority}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ))
+                                    }
+                                </ScrollView>
+
+                                {/* Add more rows as needed */}
                             </View>
                         </ScrollView>
-                    </ScrollView>
+                    </View>
 
-                } */}
+                    {/* doughnut */}
+                    <View style={{ alignItems: 'center', marginBottom: 16 }}>
+                        <DoughnutChart />
+                    </View>
+                    {/* doughnut */}
+
+                    {/* {
+                        checkInOutText === 'CHECKOUT' &&
+    
+                        <ScrollView vertical={true} style={{
+                            marginTop: 8
+                        }}>
+                            <ScrollView horizontal={true}>
+                                <View style={styles.TableContainer}>
+                                    <View style={styles.tableRow}>
+                                        <Text style={styles.headerCell}>Name</Text>
+                                        <Text style={styles.headerCell}>Description</Text>
+                                        <Text style={styles.headerCell}>Scheduled on</Text>
+                                        <Text style={styles.headerCell}>Task owner name</Text>
+                                        <Text style={styles.headerCell}>Priority</Text>
+                                    </View>
+    
+                                    {
+                                        taskList && taskList?.map((task, index) => (
+                                            <TouchableOpacity style={styles.tableRow} key={index} onPress={() => gotoTaskDetail(task)}>
+                                                <Text style={styles.dataCell}>{task.task_name}</Text>
+                                                <Text style={styles.dataCell}>{task.task_description}</Text>
+                                                <Text style={styles.dataCell}>{task.task_scheduledon}</Text>
+                                                <Text style={styles.dataCell}>{task.task_owner_name}</Text>
+                                                <Text style={[styles.dataCell, { backgroundColor: getPriorityColor(task.priority), color: getTextColor(task.priority) }]}>
+                                                    {task.priority}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ))
+                                    }
+    
+                                </View>
+                            </ScrollView>
+                        </ScrollView>
+    
+                    } */}
 
 
+                </ScrollView>
 
 
                 {/* AddTaskModal */}

@@ -254,9 +254,15 @@ const TaskDetails = () => {
                 return completed
             case 'BEYOND THE SCOPE':
                 return beyondScope
+            case '':
+                return TaskOpen
+            case '0':
+                return TaskOpen
+            case 0:
+                return TaskOpen
             // Add cases for other statuses as needed
-            // default:
-            //     return require('../images/default_image.png');
+            default:
+                return TaskOpen;
         }
     };
 
@@ -455,7 +461,7 @@ const TaskDetails = () => {
 
     // console.log(allStatusList)
 
-    // console.log(statusArray)
+    console.log('statusArray', statusArray)
 
     // console.log(task_id, created_on, task_scheduledon)
     return (
