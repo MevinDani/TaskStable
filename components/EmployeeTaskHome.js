@@ -14,6 +14,7 @@ import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Header from './Header';
 import DoughnutChart from './Test2';
+import firestore from '@react-native-firebase/firestore'
 
 
 // Get the device's screen dimensions
@@ -55,6 +56,10 @@ const EmployeeTaskHome = () => {
     const [showProject, setShowProject] = useState(false)
 
     const [selectedProject, setSelectedProject] = useState('')
+
+    // useEffect(() => {
+    //     firestore().collection('test').doc("JbxFuApd80nSJibJJqtF")
+    // }, [])
 
     const [mapRegion, setMapRegion] = useState({
         latitude: 0,
