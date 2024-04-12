@@ -71,7 +71,13 @@ const Header = () => {
     return (
         <>
             <View style={{
-                width: '100%'
+                width: '100%',
+                backgroundColor: 'white',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.25,
+                shadowRadius: 3,
+                elevation: 5,
             }}>
 
                 {/* HeaderNav */}

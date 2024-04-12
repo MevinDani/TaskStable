@@ -67,6 +67,8 @@ const TaskDetails = () => {
 
     const [uploadLoader, setUploadLoader] = useState(false)
 
+    const [checkInOutText, setCheckInOut] = useState('')
+
     let currentDate = new Date();
     let formattedDate = currentDate.toISOString().replace("T", " ").replace("Z", "");
 
@@ -453,8 +455,78 @@ const TaskDetails = () => {
 
     }, [taskData]);
 
+    useEffect(() => {
+        const currentDate = new Date();
+        const currentDateString = currentDate.toISOString().slice(0, 10); // Get the date part of the ISO string
 
-    // console.log('userAttendanceFromDet', userAttendance)
+        if (userAttendance && userAttendance.length > 0) {
+            // Check if the punch_time is from today
+            const punchTime = new Date(userAttendance[0].punch_time);
+            const punchTimeString = punchTime.toISOString().slice(0, 10); // Get the date part of the ISO string
+
+            if (punchTimeString === currentDateString && userAttendance[0].type === 'IN') {
+                console.log('Punch time is from today');
+                setCheckInOut('CHECKOUT');
+                // const latitude = userAttendance && parseFloat(userAttendance[0].latitude);
+                // const longitude = userAttendance && parseFloat(userAttendance[0].longitude);
+
+
+                // const fetchUserData = async () => {
+                //     try {
+                //         let userDataJson = await AsyncStorage.getItem('userData');
+                //         let userData = JSON.parse(userDataJson) || {};
+
+                //         // const latitude = mapRegion && mapRegion.latitude
+                //         // const longitude = mapRegion && mapRegion.longitude
+
+                //         // Add latitude and longitude to userData
+                //         userData.latitude = latitude;
+                //         userData.longitude = longitude;
+
+                //         // Update state with modified userData
+                //         setUserData(userData);
+                //         setEmpId(userData.empid);
+
+                //         // Store updated userData back to AsyncStorage
+                //         await AsyncStorage.setItem('userData', JSON.stringify(userData));
+
+                //         console.log('userData', userData);
+                //         // showUserDataToast(userData);
+
+                //     } catch (error) {
+                //         console.error('Error fetching user data:', error);
+                //     }
+                // };
+
+                // fetchUserData();
+                // // Update UI or perform actions accordingly
+                // setMapRegion(prevRegion => ({
+                //     ...prevRegion,
+                //     latitude,
+                //     longitude
+                // }));
+            }
+            // else if (punchTimeString === currentDateString && userAttendance[0].type === 'OUT') {
+            //     console.log('Punch time is from today, but type is OUT');
+            //     setCheckInOut('CHECKIN');
+            // }
+            else if (punchTimeString === currentDateString && userAttendance[0].type === 'OUT') {
+                console.log('Punch time is from today, but type is OUT');
+                setCheckInOut('CHECKIN');
+            }
+            else if (punchTimeString !== currentDateString && userAttendance[0].type === 'IN') {
+                console.log('Punch time is not from today');
+                setCheckInOut('CHECKIN');
+            }
+            else if (punchTimeString !== currentDateString) {
+                console.log('Punch time is not from today');
+                setCheckInOut('CHECKIN');
+            }
+        }
+    }, [userAttendance]);
+
+
+    console.log('userAttendanceFromDet', userAttendance)
 
     // console.log('taskData', taskData)
     // console.log('taskHistory', taskHistory)
@@ -645,7 +717,7 @@ const TaskDetails = () => {
                     </View>
 
                     {
-                        userAttendance && userAttendance[0].type === 'IN' &&
+                        checkInOutText && checkInOutText === 'CHECKOUT' &&
 
                         <>
                             <View style={{
@@ -852,7 +924,7 @@ const TaskDetails = () => {
                     }
 
                     {
-                        userAttendance && userAttendance[0].type === 'OUT' &&
+                        checkInOutText && checkInOutText === 'CHECKIN' &&
 
                         <View style={{
                             margin: 8
@@ -1021,6 +1093,9 @@ const TaskDetails = () => {
                     </View>
                 </View>
             }
+
+
+            {/* chatBox */}
 
             <View style={styles.ChatIcon}>
                 <TouchableOpacity onPress={() => setChatBoxView(true)}>

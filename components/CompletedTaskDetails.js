@@ -896,7 +896,7 @@ const styles = StyleSheet.create({
     TaskHomeWrapper: {
         flex: 1,
         alignItems: "center",
-        backgroundColor: 'white'
+        backgroundColor: '#E6E6FA',
     },
     THHeaderNav: {
         width: '100%',

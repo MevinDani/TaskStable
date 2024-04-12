@@ -91,7 +91,13 @@ const DoughnutChart = () => {
     // console.log(userData, 'userData')
     console.log('taskCount', taskCount)
     return (
-        <View style={{ justifyContent: 'center', alignItems: 'center', backgroundColor: 'white', width: '94%', padding: 8, borderRadius: 4 }}>
+        <View style={{
+            justifyContent: 'center', alignItems: 'center', backgroundColor: 'white', width: '94%', padding: 8, borderRadius: 4, shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.25,
+            shadowRadius: 3,
+            elevation: 5,
+        }}>
 
             <View style={{
                 width: '100%', padding: 8, margin: 4

@@ -166,10 +166,16 @@ const EmployeeTaskHome = () => {
                     latitude,
                     longitude
                 }));
-            } else if (punchTimeString === currentDateString && userAttendance[0].type === 'OUT') {
+            }
+            else if (punchTimeString === currentDateString && userAttendance[0].type === 'OUT') {
                 console.log('Punch time is from today, but type is OUT');
                 setCheckInOut('CHECKIN');
-            } else if (punchTimeString !== currentDateString) {
+            }
+            else if (punchTimeString !== currentDateString && userAttendance[0].type === 'IN') {
+                console.log('Punch time is not from today');
+                setCheckInOut('CHECKIN');
+            }
+            else if (punchTimeString !== currentDateString) {
                 console.log('Punch time is not from today');
                 setCheckInOut('CHECKIN');
             }
@@ -624,6 +630,9 @@ const EmployeeTaskHome = () => {
         Linking.openSettings();
     };
 
+
+    console.log('userAttendanceFromHome', userAttendance)
+
     // console.log('mapRegion', mapRegion)
 
 
@@ -726,7 +735,12 @@ const EmployeeTaskHome = () => {
                     <View style={{
                         marginTop: 8,
                         height: 500,
-                        marginBottom: 16
+                        marginBottom: 16,
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 3,
+                        elevation: 5,
                     }}>
                         <ScrollView horizontal={true}>
                             <View style={styles.TableContainer}>
@@ -1309,6 +1323,7 @@ const styles = StyleSheet.create({
     TaskHomeWrapper: {
         flex: 1,
         alignItems: "center",
+        backgroundColor: '#E6E6FA',
     },
     THHeaderNav: {
         width: '100%',
@@ -1342,7 +1357,8 @@ const styles = StyleSheet.create({
         width: "100%",
         paddingRight: 14,
         paddingTop: 14,
-        color: "black"
+        color: "black",
+
     },
     buttonAdd: {
         width: '45%',
@@ -1352,7 +1368,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         flexDirection: "row",
         justifyContent: "center",
-        color: 'black'
+        color: 'black',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3,
+        elevation: 5,
     },
     TableContainer: {
         width: "100%",
