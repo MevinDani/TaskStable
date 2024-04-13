@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import Header from './Header';
 import DoughnutChart from './Test2';
 import firestore from '@react-native-firebase/firestore'
+import Loader from './Loader';
 
 
 // Get the device's screen dimensions
@@ -56,6 +57,10 @@ const EmployeeTaskHome = () => {
     const [showProject, setShowProject] = useState(false)
 
     const [selectedProject, setSelectedProject] = useState('')
+
+    const [showLoader, setShowLoader] = useState(false)
+
+    const [showTaskAddToast, setShowTaskAddToast] = useState(false)
 
     // useEffect(() => {
     //     firestore().collection('test').doc("JbxFuApd80nSJibJJqtF")
@@ -106,6 +111,7 @@ const EmployeeTaskHome = () => {
             // const response = await axios.get(`https://cubixweberp.com:156/api/CRMTaskMainList/CPAYS/owner/AJMAL/-/-/-/-/2024-01-10/2024-03-28/-`);
             setTaskList(response.data);
             showTaskSaveToast()
+            setShowTaskAddToast(true)
             console.log('fetchDataNew')
         } catch (error) {
             console.log(error, 'getTaskListError')
@@ -387,7 +393,16 @@ const EmployeeTaskHome = () => {
         return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     };
 
+    useEffect(() => {
+        if (showTaskAddToast && taskList) {
+            console.log('showTaskAddToast', showTaskAddToast)
+            showTaskSaveToast()
+        }
+    }, [showTaskAddToast, taskList])
+
     const saveTask = async () => {
+
+        setShowLoader(true)
         if (taskname !== '' && taskDescription !== '' && includeTravel !== null && priorityLevel !== null && taskComesUnder !== null && taskType !== null) {
             console.log('field is filled')
             try {
@@ -428,28 +443,37 @@ const EmployeeTaskHome = () => {
 
                 // Assuming a successful response has status code 200
                 if (response.status === 200) {
-                    showTaskSaveToast()
+                    setModalVisible(false)
+                    setShowTaskAddToast(true)
+
                     fetchDataNew()
+                    showTaskSaveToast()
                     // Task saved successfully, handle any further actions here
                     console.log('Task saved successfully');
                     console.log(response.data)
+                    setShowLoader(false)
                     // setModalVisible(false)
                 } else {
                     // Handle other status codes if needed
                     console.error('Failed to save task:', response.statusText);
                     console.log(response)
                     setModalVisible(false)
+                    setShowLoader(false)
                 }
                 setModalVisible(false)
             } catch (error) {
                 // Handle network errors or other issues
                 console.error('Error while saving task:', error);
                 ErrorAddTask()
+                setShowLoader(false)
+
             }
 
         } else {
             console.log('field is empty')
             showEmptyTaskFields()
+            setShowLoader(false)
+
         }
     };
 
@@ -533,7 +557,8 @@ const EmployeeTaskHome = () => {
     };
 
     const sendCheckInOutReq = async () => {
-        let reqData; // Declare reqData variable outside of if statements to make it accessible
+        setShowLoader(true)
+        let reqData;
 
         if (checkInOutText === 'CHECKIN') {
             reqData = [{
@@ -579,10 +604,13 @@ const EmployeeTaskHome = () => {
                 // Call fetchUserAttendance
                 fetchUserAttendance();
                 setMapModalVisible(false)
+                setShowLoader(false)
             }
         } catch (error) {
             // Handle errors
             console.error('Error:', error);
+            setShowLoader(false)
+            setMapModalVisible(false)
         }
     };
 
@@ -1200,6 +1228,11 @@ const EmployeeTaskHome = () => {
                         </View>
                     </View>
                 </Modal>
+
+                {
+                    showLoader &&
+                    <Loader visible={showLoader} />
+                }
 
                 {/* MapModal */}
                 <Modal

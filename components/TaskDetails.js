@@ -18,6 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import Header from './Header'
 import DocumentPicker from 'react-native-document-picker';
 import ToastManager, { Toast } from 'toastify-react-native'
+import Loader from './Loader'
 
 
 const TaskDetails = () => {
@@ -68,6 +69,8 @@ const TaskDetails = () => {
     const [uploadLoader, setUploadLoader] = useState(false)
 
     const [checkInOutText, setCheckInOut] = useState('')
+
+    const [showLoader, setShowLoader] = useState(false)
 
     let currentDate = new Date();
     let formattedDate = currentDate.toISOString().replace("T", " ").replace("Z", "");
@@ -186,6 +189,8 @@ const TaskDetails = () => {
     // taskstatusSave
     const taskStatusSave = async () => {
 
+        setShowLoader(true)
+
         setStatusDescription('')
 
         const statusCode = allStatusList.find((item) => item.code_name === selectedStatus)?.code_value;
@@ -227,9 +232,11 @@ const TaskDetails = () => {
                 console.log(res, 'taskSave')
                 fetchHistoryData()
                 setSelectedStatus(null)
+                setShowLoader(false)
             })
         } catch (error) {
             console.error('Error fetching data:', error);
+            setShowLoader(false)
         }
     }
 
@@ -308,6 +315,7 @@ const TaskDetails = () => {
 
     const handleUpload = async () => {
         setUploadLoader(true)
+        setShowLoader(true)
         try {
             // Create FormData object
             const formData = new FormData();
@@ -342,9 +350,11 @@ const TaskDetails = () => {
                 showFileUploadToast()
                 fetchHistoryData()
                 setUploadLoader(false)
+                setShowLoader(false)
             }
         } catch (error) {
             console.error('Upload error:', error);
+            setShowLoader(false)
         }
     };
 
@@ -1184,6 +1194,11 @@ const TaskDetails = () => {
                         </View>
                     </View>
                 </View>
+            }
+
+            {
+                showLoader &&
+                <Loader visible={showLoader} />
             }
 
         </SafeAreaView >
