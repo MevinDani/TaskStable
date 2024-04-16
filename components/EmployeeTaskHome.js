@@ -14,8 +14,10 @@ import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Header from './Header';
 import DoughnutChart from './Test2';
-import firestore from '@react-native-firebase/firestore'
+// import firestore from '@react-native-firebase/firestore'
 import Loader from './Loader';
+import messaging from '@react-native-firebase/messaging';
+
 
 
 // Get the device's screen dimensions
@@ -61,6 +63,24 @@ const EmployeeTaskHome = () => {
     const [showLoader, setShowLoader] = useState(false)
 
     const [showTaskAddToast, setShowTaskAddToast] = useState(false)
+
+    const [msgModal, setmsgModal] = useState(false);
+    const [messageData, setMessageData] = useState(null);
+
+    useEffect(() => {
+        const unsubscribe = messaging().onMessage(async (remoteMessage) => {
+            // When a foreground message is received, set the message data and show the modal
+            setMessageData(remoteMessage.data);
+            setmsgModal(true);
+        });
+
+        return unsubscribe;
+    }, []);
+
+    const closeModal = () => {
+        // Close the modal
+        setmsgModal(false);
+    };
 
     // useEffect(() => {
     //     firestore().collection('test').doc("JbxFuApd80nSJibJJqtF")
@@ -1348,8 +1368,25 @@ const EmployeeTaskHome = () => {
 
                 </Modal>
 
+                {
+                    msgModal &&
+                    <View
+                        // visible={modalVisible}
+                        // animationType="slide"
+                        // onRequestClose={closeModal}
+                        style={styles.mapmodalContainer}
+                    >
+                        {/* <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}> */}
+                        <View style={styles.mapmodalContent}>
+                            <Text>New Message Received!</Text>
+                            <Text>{messageData ? JSON.stringify(messageData) : ''}</Text>
+                            <Button title="Close Modal" onPress={closeModal} />
+                        </View>
+                    </View>
+                }
                 {/* <LocationModal mapModalVisible={mapModalVisible} /> */}
             </View >
+
         </SafeAreaView >
     )
 }
@@ -1513,7 +1550,26 @@ const styles = StyleSheet.create({
         ...StyleSheet.absoluteFillObject,
         // width: Dimensions.get('window').width,
         // height: Dimensions.get('window').height,
-    }
+    },
+    mapmodalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+
+        zIndex: 2,
+        backgroundColor: '#00000080',
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+    },
+    mapmodalContent: {
+        backgroundColor: '#F7F7F7',
+        padding: 15,
+        borderRadius: 10,
+        alignItems: 'center',
+        width: '94%'
+    },
 })
 
 export default EmployeeTaskHome

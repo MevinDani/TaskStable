@@ -19,6 +19,9 @@ import Header from './Header'
 import DocumentPicker from 'react-native-document-picker';
 import ToastManager, { Toast } from 'toastify-react-native'
 import Loader from './Loader'
+import messaging from '@react-native-firebase/messaging';
+import { SERVER_KEY } from "@env";
+
 
 
 const TaskDetails = () => {
@@ -398,6 +401,28 @@ const TaskDetails = () => {
         let stringifiedJson = JSON.stringify(msgData)
         console.log('stringifiedJson', stringifiedJson)
         try {
+            // Obtain the FCM token of the user
+            const fcmToken = await messaging().getToken();
+
+            // Construct the notification payload
+            const notification = {
+                from: fcmToken,
+                notification: {
+                    title: 'New Message',
+                    body: {
+                        task_id: taskHistory[0].task_id,
+                        chat_message: chatMsg,
+                        task_ownder_id: taskHistory[0].task_owner_id,
+                    },
+                    // You can customize the notification further as needed
+                },
+            };
+
+            console.log('notification', notification)
+
+            // Send the FCM token to the FCM API
+            // await sendFcmTokenToApi(notification);
+
             const response = await axios.post(`https://cubixweberp.com:156/api/CRMTaskChat`, stringifiedJson, {
                 headers: {
                     'Content-Type': 'application/json'
@@ -411,6 +436,35 @@ const TaskDetails = () => {
             console.error('chat error:', error);
         }
     }
+
+    // Function to send the FCM token to the FCM API
+    const sendFcmTokenToApi = async (notification) => {
+        try {
+            // Construct the notification payload for sending the FCM token
+            // const notification = {
+            //     to: fcmToken,
+            //     data: {
+            //         task_id: taskHistory[0].task_id,
+            //         chat_message: chatMsg,
+            //         task_ownder_id: taskHistory[0].task_owner_id
+            //     },
+            // };
+
+            // Send the FCM token to the FCM API
+            const response = await fetch('https://fcm.googleapis.com/fcm/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': SERVER_KEY, // Replace with your server key obtained from Firebase console
+                },
+                body: JSON.stringify(notification),
+            });
+
+            console.log('FCM token sent to API:', response);
+        } catch (error) {
+            console.error('Error sending FCM token to API:', error);
+        }
+    };
 
     const getImage = async () => {
         setImagePoP(true)
@@ -535,15 +589,17 @@ const TaskDetails = () => {
         }
     }, [userAttendance]);
 
+    console.log('serverKey', SERVER_KEY)
 
-    console.log('userAttendanceFromDet', userAttendance)
+
+    // console.log('userAttendanceFromDet', userAttendance)
 
     // console.log('taskData', taskData)
     // console.log('taskHistory', taskHistory)
 
     // console.log(allStatusList)
 
-    console.log('statusArray', statusArray)
+    // console.log('statusArray', statusArray)
 
     // console.log(task_id, created_on, task_scheduledon)
     return (
