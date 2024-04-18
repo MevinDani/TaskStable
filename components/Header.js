@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
         top: '40%',
         left: '10%',
         width: '80%',
-        height: '20%',
+        height: 160,
         borderRadius: 8
     }
 })

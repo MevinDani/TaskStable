@@ -8,6 +8,8 @@ import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import ToastManager, { Toast } from 'toastify-react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
+
 
 const Login = () => {
 
@@ -32,21 +34,41 @@ const Login = () => {
 
     const [userDataExists, setUserDataExists] = useState(false);
 
-    useEffect(() => {
-        const checkUserData = async () => {
-            try {
-                const userDataJson = await AsyncStorage.getItem('userData');
-                const userData = JSON.parse(userDataJson);
-                setUserDataExists(userData !== null);
-                if (userData !== null) {
-                    navigation.navigate('EmployeeHome')
+    // useEffect(() => {
+    //     const checkUserData = async () => {
+    //         try {
+    //             const userDataJson = await AsyncStorage.getItem('userData');
+    //             const userData = JSON.parse(userDataJson);
+    //             setUserDataExists(userData !== null);
+    //             if (userData !== null) {
+    //                 navigation.navigate('EmployeeHome')
+    //             }
+    //         } catch (error) {
+    //             console.error('Error checking user data:', error);
+    //         }
+    //     };
+    //     checkUserData();
+    // }, []);
+
+    useFocusEffect(
+        React.useCallback(() => {
+            const checkUserData = async () => {
+                try {
+                    const userDataJson = await AsyncStorage.getItem('userData');
+                    const userData = JSON.parse(userDataJson);
+                    setUserDataExists(userData !== null);
+                    if (userData !== null) {
+                        navigation.navigate('EmployeeHome')
+                    }
+                } catch (error) {
+                    console.error('Error checking user data:', error);
                 }
-            } catch (error) {
-                console.error('Error checking user data:', error);
-            }
-        };
-        checkUserData();
-    }, []);
+            };
+            checkUserData();
+
+            checkUserData();
+        }, [navigation])
+    );
 
 
     const handleLogin = async () => {

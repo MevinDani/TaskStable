@@ -65,17 +65,66 @@ const EmployeeTaskHome = () => {
     const [showTaskAddToast, setShowTaskAddToast] = useState(false)
 
     const [msgModal, setmsgModal] = useState(false);
+
+    const [newTaskModal, setNewTaskModal] = useState(false);
+
     const [messageData, setMessageData] = useState(null);
+
+    const [fcmToken, setFcmToken] = useState(null);
+
+    useEffect(() => {
+        // Function to retrieve FCM token
+        const retrieveFcmToken = async () => {
+            try {
+                const token = await messaging().getToken();
+                setFcmToken(token);
+                // if (token) {
+                //     try {
+                //         const response = await axios.post(`https://demoURL`, { device_token: token })
+
+                //         if (response.status === 200) {
+                //             console.log('fcmSaved')
+                //         }
+                //     } catch (error) {
+                //         console.error('Error sending FCM token:', error);
+                //     }
+                // }
+                // Save the token to AsyncStorage
+                await AsyncStorage.setItem('fcmToken', token);
+            } catch (error) {
+                console.error('Error retrieving FCM token:', error);
+            }
+        };
+
+        // Call the function to retrieve FCM token
+        retrieveFcmToken();
+
+        // Add listener to refresh FCM token if it changes
+        const unsubscribe = messaging().onTokenRefresh(retrieveFcmToken);
+
+        // Clean up subscription when component unmounts
+        return unsubscribe;
+    }, []);
+
+    // console.log('fcmTokenFromHome', fcmToken)
 
     useEffect(() => {
         const unsubscribe = messaging().onMessage(async (remoteMessage) => {
+
+            if (remoteMessage.notification.title === 'New Message') {
+                setmsgModal(true);
+            }
+            if (remoteMessage.notification.title === 'New Task') {
+                setNewTaskModal(true);
+            }
             // When a foreground message is received, set the message data and show the modal
             setMessageData(remoteMessage.data);
-            setmsgModal(true);
         });
 
         return unsubscribe;
     }, []);
+
+    console.log('messageData', messageData)
 
     const closeModal = () => {
         // Close the modal
@@ -286,6 +335,40 @@ const EmployeeTaskHome = () => {
         };
         fetchUserData();
     }, []);
+
+    useEffect(() => {
+        const sendFcmToken = async () => {
+
+            const fmcData = [
+                {
+                    CMPCODE: "CPAYS",
+                    user_id: userData.empid,
+                    device_token: fcmToken
+                }
+            ]
+
+            console.log('fmcData', fmcData)
+
+            try {
+                const response = await axios.post(`https://cubixweberp.com:156/api/CRMUserIdDeviceToken`, JSON.stringify(fmcData), {
+
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+
+                if (response.status === 200) {
+                    console.log('fcmSaved', response.data)
+                }
+            } catch (error) {
+                console.error('Error sending FCM token:', error);
+            }
+        }
+        if (fcmToken && userData) {
+            sendFcmToken()
+            console.log('sendingFcmCall')
+        }
+    }, [fcmToken, userData])
 
     console.log(userData, 'userData')
 
@@ -541,10 +624,12 @@ const EmployeeTaskHome = () => {
     // tasklistclick
 
     const gotoTaskDetail = (task) => {
+        // console.log(task)
         navigation.navigate('TaskDetails', {
             task_id: task.task_id,
             created_on: task.created_on,
-            task_scheduledon: task.task_scheduledon
+            task_scheduledon: task.task_scheduledon,
+            openChat: false
         });
     };
 
@@ -575,6 +660,76 @@ const EmployeeTaskHome = () => {
             return false;
         }
     };
+
+    useEffect(() => {
+        const currentDate = new Date();
+        const currentDateString = currentDate.toISOString().slice(0, 10); // Get the date part of the ISO string
+
+        if (userAttendance && userAttendance.length > 0) {
+            // Check if the punch_time is from today
+            const punchTime = new Date(userAttendance[0].punch_time);
+            const punchTimeString = punchTime.toISOString().slice(0, 10); // Get the date part of the ISO string
+
+            if (punchTimeString === currentDateString && userAttendance[0].type === 'IN') {
+                console.log('Punch time is from today');
+                setCheckInOut('CHECKOUT');
+                // const latitude = userAttendance && parseFloat(userAttendance[0].latitude);
+                // const longitude = userAttendance && parseFloat(userAttendance[0].longitude);
+
+
+                // const fetchUserData = async () => {
+                //     try {
+                //         let userDataJson = await AsyncStorage.getItem('userData');
+                //         let userData = JSON.parse(userDataJson) || {};
+
+                //         // const latitude = mapRegion && mapRegion.latitude
+                //         // const longitude = mapRegion && mapRegion.longitude
+
+                //         // Add latitude and longitude to userData
+                //         userData.latitude = latitude;
+                //         userData.longitude = longitude;
+
+                //         // Update state with modified userData
+                //         setUserData(userData);
+                //         setEmpId(userData.empid);
+
+                //         // Store updated userData back to AsyncStorage
+                //         await AsyncStorage.setItem('userData', JSON.stringify(userData));
+
+                //         console.log('userData', userData);
+                //         // showUserDataToast(userData);
+
+                //     } catch (error) {
+                //         console.error('Error fetching user data:', error);
+                //     }
+                // };
+
+                // fetchUserData();
+                // // Update UI or perform actions accordingly
+                // setMapRegion(prevRegion => ({
+                //     ...prevRegion,
+                //     latitude,
+                //     longitude
+                // }));
+            }
+            // else if (punchTimeString === currentDateString && userAttendance[0].type === 'OUT') {
+            //     console.log('Punch time is from today, but type is OUT');
+            //     setCheckInOut('CHECKIN');
+            // }
+            else if (punchTimeString === currentDateString && userAttendance[0].type === 'OUT') {
+                console.log('Punch time is from today, but type is OUT');
+                setCheckInOut('CHECKIN');
+            }
+            else if (punchTimeString !== currentDateString && userAttendance[0].type === 'IN') {
+                console.log('Punch time is not from today');
+                setCheckInOut('CHECKIN');
+            }
+            else if (punchTimeString !== currentDateString) {
+                console.log('Punch time is not from today');
+                setCheckInOut('CHECKIN');
+            }
+        }
+    }, [userAttendance]);
 
     const sendCheckInOutReq = async () => {
         setShowLoader(true)
@@ -681,6 +836,17 @@ const EmployeeTaskHome = () => {
 
     const openLocationSettings = () => {
         Linking.openSettings();
+    };
+
+    // Function to handle navigation to TaskDetails
+    const navigateToTaskDetails = (data) => {
+        setmsgModal(false);
+        navigation.navigate('TaskDetails', {
+            task_id: data.task_id,
+            created_on: data.created_on,
+            task_scheduledon: data.task_scheduledon,
+            openChat: true
+        });
     };
 
 
@@ -1378,9 +1544,34 @@ const EmployeeTaskHome = () => {
                     >
                         {/* <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}> */}
                         <View style={styles.mapmodalContent}>
-                            <Text>New Message Received!</Text>
-                            <Text>{messageData ? JSON.stringify(messageData) : ''}</Text>
-                            <Button title="Close Modal" onPress={closeModal} />
+                            <Text style={{ fontWeight: 'bold', fontSize: 16 }}>New Message Received!</Text>
+                            <View>
+                                <Text>
+                                    {messageData.task_ownder_id} send you a message
+                                </Text>
+                            </View>
+                            <Button title="OpenChat" onPress={() => navigateToTaskDetails(messageData)} />
+                        </View>
+                    </View>
+                }
+
+                {
+                    newTaskModal &&
+                    <View
+                        // visible={modalVisible}
+                        // animationType="slide"
+                        // onRequestClose={closeModal}
+                        style={styles.mapmodalContainer}
+                    >
+                        {/* <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}> */}
+                        <View style={styles.mapmodalContent}>
+                            <Text style={{ fontWeight: 'bold', fontSize: 16 }}>New Task assigned</Text>
+                            <View>
+                                <Text>
+                                    {messageData.task_creator_id} assigned you a Task
+                                </Text>
+                            </View>
+                            <Button title="OpenChat" onPress={() => setNewTaskModal(!newTaskModal)} />
                         </View>
                     </View>
                 }

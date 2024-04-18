@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { SafeAreaView, View, Text, StyleSheet, Image, TouchableOpacity, ImageBackground, TextInput, ScrollView, ActivityIndicator } from 'react-native'
 import userAvt from '../images/userAvt.png'
 import ViewJobList from '../images/ic_view_job_list.png'
@@ -26,7 +26,12 @@ import { SERVER_KEY } from "@env";
 
 const TaskDetails = () => {
     const route = useRoute()
-    const { task_id, created_on, task_scheduledon } = route.params;
+
+    const { task_id, created_on, task_scheduledon, openChat } = route.params;
+
+    const scrollViewRef = useRef();
+
+
     const createdDate = created_on.split('T')[0]; // Extract date part
     const scheduledDate = task_scheduledon.split('T')[0]; // Extract date part
 
@@ -65,6 +70,8 @@ const TaskDetails = () => {
 
     const [chatBoxView, setChatBoxView] = useState(false)
 
+    // const [chatOpen, setChatOpen] = useState(false)
+
     const [chatMsg, setChatMsg] = useState('')
 
     const [chatData, setChatData] = useState(null)
@@ -80,11 +87,20 @@ const TaskDetails = () => {
 
     // console.log('formattedDate', formattedDate);
 
+    console.log(task_id, created_on, task_scheduledon)
+
+    const scrollToBottom = () => {
+        scrollViewRef.current.scrollToEnd({ animated: true });
+    };
 
 
     const handleStatusClick = (item) => {
         setSelectedStatus(item === selectedStatus ? null : item);
     };
+
+    useEffect(() => {
+        setChatBoxView(openChat);
+    }, []);
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -364,7 +380,7 @@ const TaskDetails = () => {
     // fetchPrevMsg
     const fetchPrevMessage = async () => {
         try {
-            const response = await axios.get(`https://cubixweberp.com:156/api/CRMTaskChatList/cpays/${taskHistory[0].task_id}`)
+            const response = await axios.get(`https://cubixweberp.com:156/api/CRMTaskChatList/cpays/${task_id}`)
             // console.log(response)
             if (response.status === 200) {
                 setChatData(response.data)
@@ -377,10 +393,10 @@ const TaskDetails = () => {
     console.log('chatData', chatData)
 
     useEffect(() => {
-        if (taskHistory) {
+        if (task_id) {
             fetchPrevMessage()
         }
-    }, [taskHistory])
+    }, [task_id])
 
     // send msg
 
@@ -390,9 +406,9 @@ const TaskDetails = () => {
             {
                 cmpcode: 'CPAYS',
                 mode: 'ENTRY',
-                task_id: taskHistory[0].task_id,
+                task_id: task_id,
                 chat_message: chatMsg,
-                task_ownder_id: taskHistory[0].task_owner_id,
+                task_ownder_id: taskData[0]?.task_owner_id,
                 created_on: formattedDate,
                 status: "n"
             }
@@ -405,23 +421,41 @@ const TaskDetails = () => {
             const fcmToken = await messaging().getToken();
 
             // Construct the notification payload
+            // const notification = {
+            //     to: 'edsSctpeTtu9oZU8QS2bAo:APA91bFT-3ezq97SOM4K5v7BJkqXHX1c8ExQbMh6VG6aP9M0i2o-5WCq0dN1HE6uRXQ8IXPZvBMGsLTgoaEkhQd8_F7WRzYZ6m11MR9FdHYENGNLNU6zz7VegpbKAaEhZt1ZL-PiAanx',
+            //     from: fcmToken,
+            //     notification: {
+            //         title: 'New Message',
+            //         body: {
+            //             task_id: task_id,
+            //             chat_message: chatMsg,
+            //             task_ownder_id: taskData[0]?.task_owner_id,
+            //         },
+            //         // You can customize the notification further as needed
+            //     },
+            // };
+
             const notification = {
-                from: fcmToken,
+                to: 'fpLSkphiRlqs_VkZTgZPIA:APA91bGFXFI6ZV3Ds6aWuOSTKJDvkGPObVt0hUZpseT6-ibdj2k7uMo9Rzu1Ukj6vE2t7rjP4P7TYOoljiJcoB9oyGeZXvIS_Vk5CFsSINmsMW7PU2q9Sbi6VTvZ5ojQGRoGeBZkLt4F',
                 notification: {
                     title: 'New Message',
-                    body: {
-                        task_id: taskHistory[0].task_id,
-                        chat_message: chatMsg,
-                        task_ownder_id: taskHistory[0].task_owner_id,
-                    },
-                    // You can customize the notification further as needed
+                    body: 'You have a new message!', // Body should be a string
                 },
+                // Optionally include data payload
+                data: {
+                    task_id: task_id,
+                    chat_message: chatMsg,
+                    task_ownder_id: taskData[0]?.task_owner_id,
+                    created_on: taskData[0].created_on,
+                    task_scheduledon: taskData[0].task_scheduledon
+                }
             };
+
 
             console.log('notification', notification)
 
             // Send the FCM token to the FCM API
-            // await sendFcmTokenToApi(notification);
+            await sendFcmTokenToApi(notification);
 
             const response = await axios.post(`https://cubixweberp.com:156/api/CRMTaskChat`, stringifiedJson, {
                 headers: {
@@ -440,27 +474,15 @@ const TaskDetails = () => {
     // Function to send the FCM token to the FCM API
     const sendFcmTokenToApi = async (notification) => {
         try {
-            // Construct the notification payload for sending the FCM token
-            // const notification = {
-            //     to: fcmToken,
-            //     data: {
-            //         task_id: taskHistory[0].task_id,
-            //         chat_message: chatMsg,
-            //         task_ownder_id: taskHistory[0].task_owner_id
-            //     },
-            // };
-
-            // Send the FCM token to the FCM API
-            const response = await fetch('https://fcm.googleapis.com/fcm/send', {
-                method: 'POST',
+            const response = await axios.post('https://fcm.googleapis.com/fcm/send', notification, {
+                // const response = await axios.post('https://fcm.googleapis.com/v1/projects/nativechatapp-9398f/messages:send', notification, {
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': SERVER_KEY, // Replace with your server key obtained from Firebase console
-                },
-                body: JSON.stringify(notification),
+                    'Authorization': `Key=${SERVER_KEY}` // Replace with your actual authorization token
+                }
             });
 
-            console.log('FCM token sent to API:', response);
+            console.log('FCM token sent to API:', response.data);
         } catch (error) {
             console.error('Error sending FCM token to API:', error);
         }
@@ -589,12 +611,12 @@ const TaskDetails = () => {
         }
     }, [userAttendance]);
 
-    console.log('serverKey', SERVER_KEY)
+    // console.log('serverKey', SERVER_KEY)
 
 
     // console.log('userAttendanceFromDet', userAttendance)
 
-    // console.log('taskData', taskData)
+    console.log('taskData', taskData)
     // console.log('taskHistory', taskHistory)
 
     // console.log(allStatusList)
@@ -1164,13 +1186,95 @@ const TaskDetails = () => {
             {/* chatBox */}
 
             <View style={styles.ChatIcon}>
-                <TouchableOpacity onPress={() => setChatBoxView(true)}>
+                <TouchableOpacity onPress={() => setChatBoxView(!chatBoxView)}>
                     <Image source={require('../images/chatIcon.png')} style={{ width: 50, height: 50 }}></Image>
                 </TouchableOpacity>
             </View>
 
             {
                 chatBoxView &&
+                <View style={styles.ViewImgModalWrapper}>
+                    <View style={styles.ViewImgModal}>
+
+                        <View style={{
+                            flexDirection: "row",
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            padding: 8
+                        }}>
+                            <Text style={{
+                                padding: 8,
+                                margin: 4,
+                                color: 'black',
+                                fontSize: 18,
+                                fontWeight: 'bold'
+                            }}>Chat</Text>
+
+                            <TouchableOpacity onPress={() => setChatBoxView(!chatBoxView)}>
+                                <Image style={{ width: 30, height: 30 }} source={require('../images/closeIcon.png')}></Image>
+                            </TouchableOpacity>
+                        </View>
+
+                        <ScrollView vertical={true} ref={scrollViewRef} onLayout={scrollToBottom} style={{
+                            padding: 8
+                        }}>
+                            <View style={{
+                                backgroundColor: "#F3F3F3",
+                                minHeight: 500,
+                                padding: 12,
+                            }}>
+                                {
+                                    chatData && chatData.map((chat, index) => (
+                                        <View style={{
+                                            width: '100%',
+                                            justifyContent: chat.user_id === userData.empid ? 'flex-end' : 'flex-start',
+                                            flexDirection: 'row'
+                                        }} key={index}>
+                                            <View style={{
+                                                backgroundColor: chat.user_id === userData.empid ? 'white' : '#F0F8FF',
+                                                padding: 12,
+                                                margin: 8
+                                            }}>
+                                                <Text style={{ color: 'black' }}>{chat.chat_message}</Text>
+                                            </View>
+                                        </View>
+                                    ))
+                                }
+                            </View>
+                        </ScrollView>
+                        <View style={[styles.inputContainer]}>
+                            <View style={{
+                                padding: 8,
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                alignItems: 'center'
+                            }}>
+                                <TextInput
+                                    // style={[styles.input, { backgroundColor: '#E0FFFF' }]}
+                                    style={{ backgroundColor: '#E0FFFF', width: chatMsg !== '' ? '80%' : '100%' }}
+                                    placeholder='Type a message'
+                                    onChangeText={text => setChatMsg(text)}
+                                    value={chatMsg}
+                                />
+                                {
+                                    chatMsg !== '' &&
+                                    <TouchableOpacity onPress={sendMsg} style={{
+                                        padding: 8,
+                                        borderRadius: 4,
+                                        backgroundColor: '#0D6EFD'
+                                    }}>
+                                        <Text style={{ color: 'white' }}>Send</Text>
+                                    </TouchableOpacity>
+
+                                }
+                            </View>
+                        </View>
+                    </View>
+                </View>
+            }
+
+            {/* {
+                chatBoxView && chatOpen === false &&
 
                 <View style={styles.ViewImgModalWrapper}>
                     <View style={styles.ViewImgModal}>
@@ -1250,7 +1354,7 @@ const TaskDetails = () => {
                         </View>
                     </View>
                 </View>
-            }
+            } */}
 
             {
                 showLoader &&

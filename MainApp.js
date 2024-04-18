@@ -69,27 +69,111 @@ const MainApp = () => {
     // Define a navigation reference using useRef
     const navigationRef = useRef(null);
 
+    // Function to handle navigation to TaskDetails
+    const navigateToTaskDetails = (data) => {
+        navigationRef.current?.navigate('TaskDetails', {
+            task_id: data.task_id,
+            created_on: data.created_on,
+            task_scheduledon: data.task_scheduledon,
+            openChat: true
+        });
+    };
 
-    // Handle notification click event
+    // Function to handle navigation to TaskDetails
+    const navigateToNewTaskDetails = (data) => {
+        navigationRef.current?.navigate('EmployeeHome')
+        // navigationRef.current?.navigate('TaskDetails', {
+        //     task_id: data.task_id,
+        //     created_on: data.created_on,
+        //     task_scheduledon: data.task_scheduledon,
+        //     openChat: false
+        // });
+    };
+
+    // Configure messaging event handler
     messaging().onNotificationOpenedApp((remoteMessage) => {
         console.log('Handle notification click event', remoteMessage);
-        // Navigate to TaskDetails when notification is clicked
-        navigationRef.current?.navigate('CompletedTask');
+        // Check if the notification contains data
+
+        if (remoteMessage.notification.title === 'New Message') {
+            // Extract the task details from the notification data
+            const taskData = {
+                task_id: remoteMessage.data.task_id,
+                created_on: remoteMessage.data.created_on,
+                task_scheduledon: remoteMessage.data.task_scheduledon
+            };
+
+            // Navigate to TaskDetails screen with the task details
+            navigateToTaskDetails(taskData);
+        }
+
+        if (remoteMessage.notification.title === 'New Task') {
+            // Extract the task details from the notification data
+            const taskData = {
+                task_id: remoteMessage.data.task_id,
+                created_on: remoteMessage.data.created_on,
+                task_scheduledon: remoteMessage.data.task_scheduledon
+            };
+
+            // Navigate to TaskDetails screen with the task details
+            navigateToNewTaskDetails(taskData)
+        }
+
     });
 
     // Function to handle FCM messages when the app is in the background or terminated
     const handleBackgroundMessage = async (remoteMessage) => {
         console.log('Message handled in the background!', remoteMessage);
-        // You can perform any necessary processing here, such as navigating to a specific screen
-        // Example: navigate to CompletedTaskPage
-        navigationRef.current?.navigate('CompletedTask');
+        // Check if the notification contains data
+        if (remoteMessage.notification.title === 'New Message') {
+            // Extract the task details from the notification data
+            const taskData = {
+                task_id: remoteMessage.data.task_id,
+                created_on: remoteMessage.data.created_on,
+                task_scheduledon: remoteMessage.data.task_scheduledon
+            };
+
+            // Navigate to TaskDetails screen with the task details
+            navigateToTaskDetails(taskData);
+        }
+
+        if (remoteMessage.notification.title === 'New Task') {
+            // Extract the task details from the notification data
+            const taskData = {
+                task_id: remoteMessage.data.task_id,
+                created_on: remoteMessage.data.created_on,
+                task_scheduledon: remoteMessage.data.task_scheduledon
+            };
+
+            // Navigate to TaskDetails screen with the task details
+            navigateToNewTaskDetails(taskData)
+        }
     };
+
+
+    // // Handle notification click event
+    // messaging().onNotificationOpenedApp((remoteMessage) => {
+    //     console.log('Handle notification click event', remoteMessage);
+    //     // Navigate to TaskDetails when notification is clicked
+    //     navigationRef.current?.navigate('CompletedTask');
+    // });
+
+    // // Function to handle FCM messages when the app is in the background or terminated
+    // const handleBackgroundMessage = async (remoteMessage) => {
+    //     console.log('Message handled in the background!', remoteMessage);
+    //     // You can perform any necessary processing here, such as navigating to a specific screen
+    //     // Example: navigate to CompletedTaskPage
+    //     navigationRef.current?.navigate('CompletedTask');
+    // };
 
     // messaging().onMessage(handleBackgroundMessage);
 
 
     // Set up background message handler
     messaging().setBackgroundMessageHandler(handleBackgroundMessage);
+
+    // kill state
+    messaging().getInitialNotification(handleBackgroundMessage)
 
 
     useEffect(() => {
