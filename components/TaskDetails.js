@@ -82,12 +82,38 @@ const TaskDetails = () => {
 
     const [showLoader, setShowLoader] = useState(false)
 
+    const [msgModal, setmsgModal] = useState(false);
+
+    const [newTaskModal, setNewTaskModal] = useState(false);
+
+    const [messageData, setMessageData] = useState(null);
+
+    const [fcmToken, setFcmToken] = useState(null);
+
     let currentDate = new Date();
     let formattedDate = currentDate.toISOString().replace("T", " ").replace("Z", "");
 
     // console.log('formattedDate', formattedDate);
 
     console.log(task_id, created_on, task_scheduledon)
+
+    useEffect(() => {
+        const unsubscribe = messaging().onMessage(async (remoteMessage) => {
+
+            if (remoteMessage.notification.title === 'New Message') {
+                setmsgModal(true);
+            }
+            if (remoteMessage.notification.title === 'New Task') {
+                setNewTaskModal(true);
+            }
+            // When a foreground message is received, set the message data and show the modal
+            setMessageData(remoteMessage.data);
+        });
+
+        return unsubscribe;
+    }, []);
+
+    console.log('messageData', messageData)
 
     const scrollToBottom = () => {
         scrollViewRef.current.scrollToEnd({ animated: true });
@@ -436,7 +462,8 @@ const TaskDetails = () => {
             // };
 
             const notification = {
-                to: 'fpLSkphiRlqs_VkZTgZPIA:APA91bGFXFI6ZV3Ds6aWuOSTKJDvkGPObVt0hUZpseT6-ibdj2k7uMo9Rzu1Ukj6vE2t7rjP4P7TYOoljiJcoB9oyGeZXvIS_Vk5CFsSINmsMW7PU2q9Sbi6VTvZ5ojQGRoGeBZkLt4F',
+
+                to: taskData[0].DEVICETOKEN_admin ? taskData[0].DEVICETOKEN_admin : "",
                 notification: {
                     title: 'New Message',
                     body: 'You have a new message!', // Body should be a string
@@ -454,16 +481,20 @@ const TaskDetails = () => {
 
             console.log('notification', notification)
 
-            // Send the FCM token to the FCM API
-            await sendFcmTokenToApi(notification);
-
             const response = await axios.post(`https://cubixweberp.com:156/api/CRMTaskChat`, stringifiedJson, {
                 headers: {
                     'Content-Type': 'application/json'
                 }
             })
-            console.log(response)
-            fetchPrevMessage()
+
+            if (response.data === 200) {
+                // Send the FCM token to the FCM API
+                await sendFcmTokenToApi(notification);
+                console.log(response.data)
+                fetchPrevMessage()
+            }
+            // console.log(response)
+            // fetchPrevMessage()
             // if (response) {
             // }
         } catch (error) {
@@ -1361,6 +1392,48 @@ const TaskDetails = () => {
                 <Loader visible={showLoader} />
             }
 
+            {
+                msgModal &&
+                <View
+                    // visible={modalVisible}
+                    // animationType="slide"
+                    // onRequestClose={closeModal}
+                    style={styles.mapmodalContainer}
+                >
+                    {/* <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}> */}
+                    <View style={styles.mapmodalContent}>
+                        <Text style={{ fontWeight: 'bold', fontSize: 16 }}>New Message Received!</Text>
+                        <View>
+                            <Text>
+                                {messageData.task_ownder_id} send you a message
+                            </Text>
+                        </View>
+                        <Button title="OpenChat" onPress={() => navigateToTaskDetails(messageData)} />
+                    </View>
+                </View>
+            }
+
+            {
+                newTaskModal &&
+                <View
+                    // visible={modalVisible}
+                    // animationType="slide"
+                    // onRequestClose={closeModal}
+                    style={styles.mapmodalContainer}
+                >
+                    {/* <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}> */}
+                    <View style={styles.mapmodalContent}>
+                        <Text style={{ fontWeight: 'bold', fontSize: 16 }}>New Task assigned</Text>
+                        <View>
+                            <Text>
+                                {messageData.task_creator_id} assigned you a Task
+                            </Text>
+                        </View>
+                        <Button title="OpenChat" onPress={() => setNewTaskModal(!newTaskModal)} />
+                    </View>
+                </View>
+            }
+
         </SafeAreaView >
     )
 }
@@ -1433,7 +1506,26 @@ const styles = StyleSheet.create({
         position: 'absolute',
         right: 15,
         bottom: 15
-    }
+    },
+    mapmodalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+
+        zIndex: 2,
+        backgroundColor: '#00000080',
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+    },
+    mapmodalContent: {
+        backgroundColor: '#F7F7F7',
+        padding: 15,
+        borderRadius: 10,
+        alignItems: 'center',
+        width: '94%'
+    },
 })
 
 export default TaskDetails
