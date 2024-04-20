@@ -1,4 +1,5 @@
-package com.awesomeproject
+
+package com.adminappnative
 import android.os.Bundle;
 
 import com.facebook.react.ReactActivity

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { SafeAreaView, View, Text, StyleSheet, Image, TouchableOpacity, ImageBackground, TextInput, ScrollView, ActivityIndicator } from 'react-native'
+import { SafeAreaView, View, Text, StyleSheet, Image, TouchableOpacity, ImageBackground, TextInput, ScrollView, ActivityIndicator, Button } from 'react-native'
 import userAvt from '../images/userAvt.png'
 import ViewJobList from '../images/ic_view_job_list.png'
 import TaskOpen from '../images/task_open.png'
@@ -12,7 +12,7 @@ import TaskStart from '../images/task_start_in_path.png'
 import TaskEnd from '../images/task_end.png'
 import completed from '../images/ic_check_scanned_button.png'
 import beyondScope from '../images/task_end_in_path.png'
-import { useRoute } from '@react-navigation/native'
+import { useNavigation, useRoute } from '@react-navigation/native'
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import Header from './Header'
@@ -30,6 +30,8 @@ const TaskDetails = () => {
     const { task_id, created_on, task_scheduledon, openChat } = route.params;
 
     const scrollViewRef = useRef();
+
+    const navigation = useNavigation()
 
 
     const createdDate = created_on.split('T')[0]; // Extract date part
@@ -99,7 +101,7 @@ const TaskDetails = () => {
 
     useEffect(() => {
         const unsubscribe = messaging().onMessage(async (remoteMessage) => {
-
+            setMessageData(remoteMessage.data);
             if (remoteMessage.notification.title === 'New Message') {
                 setmsgModal(true);
             }
@@ -107,7 +109,7 @@ const TaskDetails = () => {
                 setNewTaskModal(true);
             }
             // When a foreground message is received, set the message data and show the modal
-            setMessageData(remoteMessage.data);
+
         });
 
         return unsubscribe;
@@ -444,7 +446,7 @@ const TaskDetails = () => {
         console.log('stringifiedJson', stringifiedJson)
         try {
             // Obtain the FCM token of the user
-            const fcmToken = await messaging().getToken();
+            // const fcmToken = await messaging().getToken();
 
             // Construct the notification payload
             // const notification = {
@@ -463,7 +465,9 @@ const TaskDetails = () => {
 
             const notification = {
 
+                // to: 'e7FBPovdT_O-VmFq4oIQQP:APA91bFpa63ZJaNOirwHMcudcroP_jaWfUTeSGNelHlQrbh-EMuNuPL9YFoL8S03UIFrgy7IS060Xx0DSbfSau9vqz9MUSYEGMC34e9JfjrKz4WMJ6-IQ1wx0dL6AIWl3CE4akEtMm14',
                 to: taskData[0].DEVICETOKEN_admin ? taskData[0].DEVICETOKEN_admin : "",
+                // to: 'e9U5gETuS8ifQ99XJ3AGnN:APA91bHNgP_H0Kkpfwnmu9UjDYeEvOlKSkLJnUUqTdSb257zdVcLdXLHTjS2ycaQaBVD7Qc5chIVo-5RtuHWaeCwLpI2MuafneZgl90tpubS9wUd1l4irhuKSZHZ42xXb231-z0ayg8Z',
                 notification: {
                     title: 'New Message',
                     body: 'You have a new message!', // Body should be a string
@@ -487,11 +491,11 @@ const TaskDetails = () => {
                 }
             })
 
-            if (response.data === 200) {
+            if (response.status === 200) {
                 // Send the FCM token to the FCM API
+                fetchPrevMessage()
                 await sendFcmTokenToApi(notification);
                 console.log(response.data)
-                fetchPrevMessage()
             }
             // console.log(response)
             // fetchPrevMessage()
@@ -502,6 +506,38 @@ const TaskDetails = () => {
         }
     }
 
+    // const sendFcmTokenToApi = async (notification) => {
+    //     try {
+    //         if (!notification) {
+    //             throw new Error('Notification object is null or undefined.');
+    //         }
+
+    //         console.log('notificationFromsendFcmTokenToApi', notification);
+
+    //         // Send the notification using the FCM token
+    //         const response = await messaging().sendMessage({
+    //             to: notification.to, // Use the provided token or the retrieved one
+    //             // to: 'e7FBPovdT_O-VmFq4oIQQP:APA91bFpa63ZJaNOirwHMcudcroP_jaWfUTeSGNelHlQrbh-EMuNuPL9YFoL8S03UIFrgy7IS060Xx0DSbfSau9vqz9MUSYEGMC34e9JfjrKz4WMJ6-IQ1wx0dL6AIWl3CE4akEtMm14',
+    //             notification: {
+    //                 title: notification.notification ? notification.notification.title : '',
+    //                 body: notification.notification ? notification.notification.body : '',
+    //             },
+    //             data: notification.data || {}, // Optionally include data payload
+    //         });
+
+    //         if (response) {
+    //             console.log('FCM token sent to API successfully.', response.data);
+    //         } else {
+    //             throw new Error('Failed to send FCM token to API. Response is null.');
+    //         }
+    //     } catch (error) {
+    //         console.error('Error sending FCM token to API:', error);
+    //     }
+    // };
+
+
+
+
     // Function to send the FCM token to the FCM API
     const sendFcmTokenToApi = async (notification) => {
         try {
@@ -509,7 +545,7 @@ const TaskDetails = () => {
                 // const response = await axios.post('https://fcm.googleapis.com/v1/projects/nativechatapp-9398f/messages:send', notification, {
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Key=${SERVER_KEY}` // Replace with your actual authorization token
+                    'Authorization': `key=${SERVER_KEY}` // Replace with your actual authorization token
                 }
             });
 
@@ -641,6 +677,17 @@ const TaskDetails = () => {
             }
         }
     }, [userAttendance]);
+
+    const openNewMsg = async () => {
+        await fetchPrevMessage()
+        scrollToBottom()
+        setmsgModal(false)
+    }
+
+    const navigateToNewTask = () => {
+        setNewTaskModal(!newTaskModal)
+        navigation.navigate('EmployeeHome')
+    }
 
     // console.log('serverKey', SERVER_KEY)
 
@@ -1408,7 +1455,8 @@ const TaskDetails = () => {
                                 {messageData.task_ownder_id} send you a message
                             </Text>
                         </View>
-                        <Button title="OpenChat" onPress={() => navigateToTaskDetails(messageData)} />
+                        {/* <Button title="OpenChat" onPress={() => navigateToTaskDetails(messageData)} /> */}
+                        <Button title="OpenChat" onPress={() => openNewMsg()} />
                     </View>
                 </View>
             }
@@ -1429,7 +1477,8 @@ const TaskDetails = () => {
                                 {messageData.task_creator_id} assigned you a Task
                             </Text>
                         </View>
-                        <Button title="OpenChat" onPress={() => setNewTaskModal(!newTaskModal)} />
+                        {/* <Button title="OpenChat" onPress={() => setNewTaskModal(!newTaskModal)} /> */}
+                        <Button title="OpenChat" onPress={() => navigateToNewTask()} />
                     </View>
                 </View>
             }

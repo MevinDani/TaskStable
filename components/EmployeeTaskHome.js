@@ -111,6 +111,8 @@ const EmployeeTaskHome = () => {
     useEffect(() => {
         const unsubscribe = messaging().onMessage(async (remoteMessage) => {
 
+            setMessageData(remoteMessage.data);
+
             if (remoteMessage.notification.title === 'New Message') {
                 setmsgModal(true);
             }
@@ -118,7 +120,6 @@ const EmployeeTaskHome = () => {
                 setNewTaskModal(true);
             }
             // When a foreground message is received, set the message data and show the modal
-            setMessageData(remoteMessage.data);
         });
 
         return unsubscribe;
@@ -849,6 +850,11 @@ const EmployeeTaskHome = () => {
         });
     };
 
+    const refreshTaskList = () => {
+        setNewTaskModal(!newTaskModal)
+        fetchDataNew()
+    }
+
 
     console.log('userAttendanceFromHome', userAttendance)
 
@@ -1571,7 +1577,7 @@ const EmployeeTaskHome = () => {
                                     {messageData.task_creator_id} assigned you a Task
                                 </Text>
                             </View>
-                            <Button title="OpenChat" onPress={() => setNewTaskModal(!newTaskModal)} />
+                            <Button title="close" onPress={() => refreshTaskList()} />
                         </View>
                     </View>
                 }
