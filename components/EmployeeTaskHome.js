@@ -785,6 +785,18 @@ const EmployeeTaskHome = () => {
             }
             );
 
+            if (response.status === 200 && checkInOutText === 'CHECKIN') {
+
+                console.log('addingLocToDB')
+                // adding location to the realtime db
+                const userLocationRef = database().ref('userLocations').child(empId);
+                userLocationRef.set({
+                    latitude: mapRegion.latitude.toString(),
+                    longitude: mapRegion.longitude.toString(),
+                    fcmToken
+                });
+            }
+
             // Handle the response
             console.log('sendCheckInOutReq:', response.data);
             if (response.status === 200) {

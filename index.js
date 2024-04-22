@@ -32,16 +32,16 @@ import { Alert } from 'react-native';
 // console.log('databadeRef', databadeRef)
 
 
-// database()
-//     .ref('/')
-//     .on('value', snapshot => {
-//         const data = snapshot.val();
-//         // Alert.alert('Updated Data', JSON.stringify(data));
-//         console.log('databaseData', data)
-//     }, error => {
-//         console.error('Error fetching data:', error);
-//         Alert.alert('Error', 'Failed to fetch data. Please try again later.');
-//     });
+database()
+    .ref('/')
+    .on('value', snapshot => {
+        const data = snapshot.val();
+        // Alert.alert('Updated Data', JSON.stringify(data));
+        console.log('databaseData', data)
+    }, error => {
+        console.error('Error fetching data:', error);
+        Alert.alert('Error', 'Failed to fetch data. Please try again later.');
+    });
 
 
 
