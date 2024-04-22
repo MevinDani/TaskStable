@@ -17,12 +17,23 @@ import DoughnutChart from './Test2';
 // import firestore from '@react-native-firebase/firestore'
 import Loader from './Loader';
 import messaging from '@react-native-firebase/messaging';
+import database from '@react-native-firebase/database';
 
 
 
 // Get the device's screen dimensions
 const { width, height } = Dimensions.get('window');
 
+
+// database()
+//     .ref('admin')
+//     .once('value')
+//     .then(snapshot => {
+//         console.log('Root data: ', snapshot.val());
+//     })
+//     .catch(error => {
+//         console.error('Error fetching data:', error);
+//     });
 
 
 
@@ -775,7 +786,7 @@ const EmployeeTaskHome = () => {
             );
 
             // Handle the response
-            console.log('Response:', response.data);
+            console.log('sendCheckInOutReq:', response.data);
             if (response.status === 200) {
                 // Call fetchUserAttendance
                 fetchUserAttendance();
@@ -814,6 +825,14 @@ const EmployeeTaskHome = () => {
                     latitudeDelta,
                     longitudeDelta,
                 });
+
+                // const userLocationRef = database().ref('userLocations').child(empId);
+                // userLocationRef.set({
+                //     latitude,
+                //     longitude,
+                //     fcmToken
+                // });
+
             },
             error => {
                 console.error(error.code, error.message);
@@ -854,6 +873,17 @@ const EmployeeTaskHome = () => {
         setNewTaskModal(!newTaskModal)
         fetchDataNew()
     }
+
+    const getCurrentDate = () => {
+        const currentDate = new Date();
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth(); // Month is zero-based
+        const day = currentDate.getDate();
+
+        // Return the current date in the required format
+        return new Date(year, month, day);
+    };
+
 
 
     console.log('userAttendanceFromHome', userAttendance)
@@ -1226,6 +1256,7 @@ const EmployeeTaskHome = () => {
                                     <DateTimePickerModal
                                         isVisible={isDatePickerVisible}
                                         mode="date"
+                                        minimumDate={getCurrentDate()}
                                         onConfirm={handleDateConfirm}
                                         onCancel={hideDatePicker}
                                     />

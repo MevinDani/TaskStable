@@ -20,6 +20,7 @@ const MainApp = () => {
 
     const [userDataExists, setUserDataExists] = useState(false);
     const [fcmToken, setFcmToken] = useState(null);
+    
 
     async function requestUserPermission() {
         const authStatus = await messaging().requestPermission();

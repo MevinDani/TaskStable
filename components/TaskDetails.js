@@ -92,6 +92,8 @@ const TaskDetails = () => {
 
     const [fcmToken, setFcmToken] = useState(null);
 
+    const [showHighTaskCount, setHighTaskCount] = useState(null)
+
     let currentDate = new Date();
     let formattedDate = currentDate.toISOString().replace("T", " ").replace("Z", "");
 
@@ -145,6 +147,24 @@ const TaskDetails = () => {
         };
         fetchUserData();
     }, []);
+
+    useEffect(() => {
+        const fetchPrevTaskCount = async () => {
+            try {
+                const response = await axios.get(`https://cubixweberp.com:156/api/CRMTAskCountowner/cpays/${userData.empid}`)
+                if (response.status === 200) {
+                    console.log(response.data)
+                    setHighTaskCount(response.data)
+                }
+            } catch (error) {
+                console.error('fetchPrevTaskCount:', error);
+            }
+        }
+
+        if (userData) {
+            fetchPrevTaskCount()
+        }
+    }, [userData])
 
     useEffect(() => {
         const fetchTaskData = async () => {
@@ -883,7 +903,7 @@ const TaskDetails = () => {
                     </View>
 
                     {
-                        checkInOutText && checkInOutText === 'CHECKOUT' &&
+                        checkInOutText && checkInOutText === 'CHECKOUT' && showHighTaskCount && showHighTaskCount[0].CNT === 0 &&
 
                         <>
                             <View style={{
@@ -1099,6 +1119,18 @@ const TaskDetails = () => {
                                 color: 'red',
                                 fontWeight: 'bold'
                             }}>You need to check in to update tasks</Text>
+                        </View>
+                    }
+
+                    {
+                        showHighTaskCount && showHighTaskCount[0]?.CNT !== 0 &&
+                        <View style={{
+                            margin: 8
+                        }}>
+                            <Text style={{
+                                color: 'red',
+                                fontWeight: 'bold'
+                            }}>Please complete previous tasks</Text>
                         </View>
                     }
 
