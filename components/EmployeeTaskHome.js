@@ -11,7 +11,7 @@ import { PermissionsAndroid } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
 import { Linking } from 'react-native';
 import { Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import Header from './Header';
 import DoughnutChart from './Test2';
 // import firestore from '@react-native-firebase/firestore'
@@ -182,7 +182,7 @@ const EmployeeTaskHome = () => {
             setTaskList(response.data);
             console.log('fetchData')
         } catch (error) {
-            console.log(error, 'getTaskListError')
+            console.log(error, 'getTaskListErrorfetchData')
         }
     };
 
@@ -328,6 +328,14 @@ const EmployeeTaskHome = () => {
             Toast.success(`Welcome ${userData.empid}`);
         }
     }
+
+    // Use useFocusEffect instead of useEffect
+    useFocusEffect(
+        React.useCallback(() => {
+            if (empId) fetchData();
+        }, [empId])
+    );
+
 
 
     useEffect(() => {
@@ -903,7 +911,7 @@ const EmployeeTaskHome = () => {
     // console.log('mapRegion', mapRegion)
 
 
-    // console.log(taskList)
+    // console.log('taskList', taskList)
     // console.log(date, 'date')
     // console.log(time, 'time')
 
@@ -1016,6 +1024,8 @@ const EmployeeTaskHome = () => {
                                     <Text style={styles.headerCell}>Name</Text>
                                     <Text style={styles.headerCell}>Description</Text>
                                     <Text style={styles.headerCell}>Scheduled on</Text>
+                                    <Text style={styles.headerCell}>Status</Text>
+                                    <Text style={styles.headerCell}>Stage</Text>
                                     <Text style={styles.headerCell}>Task owner name</Text>
                                     <Text style={styles.headerCell}>Priority</Text>
                                 </View>
@@ -1033,6 +1043,8 @@ const EmployeeTaskHome = () => {
                                                 <Text style={styles.dataCell}>{task.task_name}</Text>
                                                 <Text style={styles.dataCell}>{task.task_description}</Text>
                                                 <Text style={styles.dataCell}>{task.task_scheduledon}</Text>
+                                                <Text style={styles.dataCell}>{task.latest_status}</Text>
+                                                <Text style={styles.dataCell}>{task.latest_stage}</Text>
                                                 <Text style={styles.dataCell}>{task.task_owner_name}</Text>
                                                 <Text style={[styles.dataCell, { backgroundColor: getPriorityColor(task.priority), color: getTextColor(task.priority) }]}>
                                                     {task.priority}

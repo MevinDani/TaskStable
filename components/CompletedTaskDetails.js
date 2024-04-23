@@ -12,6 +12,7 @@ import TaskStart from '../images/task_start_in_path.png'
 import TaskEnd from '../images/task_end.png'
 import completed from '../images/ic_check_scanned_button.png'
 import beyondScope from '../images/task_end_in_path.png'
+import pause from '../images/pause.png'
 import { useRoute } from '@react-navigation/native'
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -244,6 +245,8 @@ const CompletedTaskDetails = () => {
                 return completed
             case 'BEYOND THE SCOPE':
                 return beyondScope
+            case 'HOLD':
+                return pause
             // Add cases for other statuses as needed
             // default:
             //     return require('../images/default_image.png');
@@ -845,7 +848,7 @@ const CompletedTaskDetails = () => {
                                                 left: -42,
                                                 top: 20
                                             }}>
-                                                <Image style={history.task_status === 'COMPLETED' ? { width: 40, height: 40 } : null} source={getImageForStatus(history.task_status)}></Image>
+                                                <Image style={(history.task_stage === 'COMPLETED' || history.task_stage === 'HOLD') ? { width: 40, height: 40 } : null} source={getImageForStatus(history.task_stage)}></Image>
                                             </View>
                                             <View style={{
                                                 marginLeft: 10,
@@ -868,7 +871,7 @@ const CompletedTaskDetails = () => {
                                                     margin: 4,
                                                     marginLeft: 25,
                                                 }}>
-                                                    <Text style={{ color: 'black', fontSize: 16 }}>{history.task_status}</Text>
+                                                    <Text style={{ color: 'black', fontSize: 16 }}>{history.task_stage}</Text>
                                                     <Text style={{ color: 'black', marginTop: 4 }}>{history.task_status_description}</Text>
                                                 </View>
                                             </View>

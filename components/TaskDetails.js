@@ -12,6 +12,7 @@ import TaskStart from '../images/task_start_in_path.png'
 import TaskEnd from '../images/task_end.png'
 import completed from '../images/ic_check_scanned_button.png'
 import beyondScope from '../images/task_end_in_path.png'
+import pause from '../images/pause.png'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -50,11 +51,18 @@ const TaskDetails = () => {
     const [endStatusFlow, setEndStatusFlow] = useState([])
 
     const initStatus = ['ESCALATED', 'ACCEPTED_OPEN', 'ACCEPTED_ON_HOLD']
-    const travelStart = ['TRAVEL_START']
-    const travelStop = ['TRAVEL_END']
-    const taskStart = ['TASK_START']
-    const taskStop = ['TASK_END']
+    const travelStart = ['TRAVEL_START', 'HOLD']
+    const travelStop = ['TRAVEL_END', 'HOLD']
+    const taskStart = ['TASK_START', 'HOLD']
+    const taskStop = ['TASK_END', 'HOLD']
     const lastStatus = ['CUSTOMER_REJECTION', 'COMPLETED', 'BEYOND THE SCOPE']
+
+    // already hold states
+    const travelStartPrevHold = ['TRAVEL_START']
+    const travelStopPrevHold = ['TRAVEL_END']
+    const taskStartPrevHold = ['TASK_START']
+    const taskStopPrevHold = ['TASK_END']
+
 
     const [selectedStatus, setSelectedStatus] = useState(null);
 
@@ -125,6 +133,7 @@ const TaskDetails = () => {
 
 
     const handleStatusClick = (item) => {
+        // console.log(item)
         setSelectedStatus(item === selectedStatus ? null : item);
     };
 
@@ -148,23 +157,40 @@ const TaskDetails = () => {
         fetchUserData();
     }, []);
 
+    const [isActiveTask, setIsActiveTask] = useState()
+
+    const [openTaskInactiveWarn, setOpenTaskInactiveWarn] = useState(false)
+
     useEffect(() => {
         const fetchPrevTaskCount = async () => {
             try {
                 const response = await axios.get(`https://cubixweberp.com:156/api/CRMTAskCountowner/cpays/${userData.empid}`)
                 if (response.status === 200) {
-                    console.log(response.data)
+                    console.log('FROMFETCHPREVCNT', response.data)
                     setHighTaskCount(response.data)
+
+                    if (response.data[0].CNT > 0) {
+                        console.log('CNT>O')
+                        if (taskData[0].latest_stage === 'ACCEPTED_OPEN' || taskData[0].latest_stage === '') {
+                            setIsActiveTask(false)
+                        } else {
+                            setIsActiveTask(true)
+                        }
+                    } else {
+                        setIsActiveTask(true)
+                    }
                 }
             } catch (error) {
                 console.error('fetchPrevTaskCount:', error);
             }
         }
 
-        if (userData) {
+        if (userData && taskData) {
             fetchPrevTaskCount()
         }
-    }, [userData])
+    }, [userData, taskData])
+
+    console.log('isActiveTask', isActiveTask)
 
     useEffect(() => {
         const fetchTaskData = async () => {
@@ -231,23 +257,43 @@ const TaskDetails = () => {
         if (taskHistory && taskData) {
             if (taskHistory.length == 0) {
                 setStatusArray(initStatus)
-            } else if (taskHistory[0].task_status === 'ACCEPTED_OPEN' && taskData[0]?.include_travel === 'Y') {
+            } else if ((taskHistory[0].task_stage === 'ACCEPTED_OPEN' || taskHistory[0].task_stage === '') && taskHistory[0].task_status !== 'HOLD' && taskData[0]?.include_travel === 'Y') {
                 setStatusArray(travelStart)
-            } else if (taskHistory[0].task_status === 'ACCEPTED_OPEN' && taskData[0]?.include_travel === 'N') {
+            } else if ((taskHistory[0].task_stage === 'ACCEPTED_OPEN' || taskHistory[0].task_stage === '') && taskHistory[0].task_status !== 'HOLD' && taskData[0]?.include_travel === 'N') {
                 setStatusArray(taskStart)
-            } else if (taskHistory[0].task_status === 'TRAVEL_START') {
+            } else if (taskHistory[0].task_stage === 'TRAVEL_START' && taskHistory[0].task_status !== 'HOLD') {
                 setStatusArray(travelStop)
-            } else if (taskHistory[0].task_status === 'TASK_START') {
+            } else if (taskHistory[0].task_stage === 'TASK_START' && taskHistory[0].task_status !== 'HOLD') {
                 setStatusArray(taskStop)
-            } else if (taskHistory[0].task_status === 'TRAVEL_END') {
+            } else if (taskHistory[0].task_stage === 'TRAVEL_END' && taskHistory[0].task_status !== 'HOLD') {
                 setStatusArray(taskStart)
-            } else if (taskHistory[0].task_status === 'TASK_END') {
+            } else if (taskHistory[0].task_stage === 'TASK_END' && taskHistory[0].task_status !== 'COMPLETED') {
                 setStatusArray(lastStatus)
-            } else if (taskHistory[0].task_status === 'ESCALATED' || taskHistory[0].task_status === 'ACCEPTED_ON_HOLD' || taskHistory[0].task_status === 'CUSTOMER_REJECTION' || taskHistory[0].task_status === 'COMPLETED' || taskHistory[0].task_status === 'BEYOND THE SCOPE') {
+            } else if (taskHistory[0].task_stage === 'TASK_END' && taskHistory[0].task_status === 'COMPLETED') {
                 setEndStatusFlow([taskHistory[0].task_status]);
+            } else if (taskHistory[0].task_status === 'HOLD' && taskHistory[1].task_stage === 'ACCEPTED_OPEN' && taskData[0]?.include_travel === 'Y') {
+                setStatusArray(travelStartPrevHold)
+            } else if (taskHistory[0].task_status === 'HOLD' && taskHistory[1].task_stage === 'ACCEPTED_OPEN' && taskData[0]?.include_travel === 'N') {
+                setStatusArray(taskStartPrevHold)
+            } else if (taskHistory[0].task_status === 'HOLD' && taskHistory[1].task_stage === 'TRAVEL_START') {
+                setStatusArray(travelStopPrevHold)
+            } else if (taskHistory[0].task_status === 'HOLD' && taskHistory[1].task_stage === 'TASK_START') {
+                setStatusArray(taskStopPrevHold)
+            } else if (taskHistory[0].task_status === 'HOLD' && taskHistory[1].task_stage === 'TRAVEL_END') {
+                setStatusArray(taskStartPrevHold)
+            } else if (taskHistory[0].task_status === 'HOLD' && taskHistory[1].task_stage === 'TASK_END' && taskHistory[0].task_status !== 'COMPLETED') {
+                setStatusArray(lastStatus)
+            }
+            else if (taskHistory[0].task_stage === 'HOLD' && taskHistory[1].task_stage === 'TASK_END' && taskHistory[0].task_status === 'COMPLETED') {
+                setEndStatusFlow([taskHistory[0].task_status]);
+            }
+            else if (taskHistory[0].task_stage === 'ESCALATED' || taskHistory[0].task_stage === 'ACCEPTED_ON_HOLD' || taskHistory[0].task_stage === 'CUSTOMER_REJECTION' || taskHistory[0].task_stage === 'COMPLETED' || taskHistory[0].task_stage === 'BEYOND THE SCOPE') {
+                setEndStatusFlow([taskHistory[0].task_stage]);
             }
         }
     }, [taskHistory, taskData])
+
+    console.log('endStatusFlow', endStatusFlow)
 
     // console.log('statusArray', statusArray)
 
@@ -262,18 +308,55 @@ const TaskDetails = () => {
 
         const statusCode = allStatusList.find((item) => item.code_name === selectedStatus)?.code_value;
 
+
+        const stageCode = allStatusList.find((item) => item.code_name === taskHistory[0]?.task_stage)?.code_value;
+
+        const defApiStatusCode = allStatusList.find((item) => item.code_name === 'ACCEPTED_OPEN')?.code_value;
+
+        let apiStatus = ''
+        let apiStatusCode = ''
+
+        let apiStage = ''
+        let apiStageCode = '0'
+
+        if (selectedStatus === 'ESCALATED' || selectedStatus === 'ACCEPTED_OPEN' || selectedStatus === 'ACCEPTED_ON_HOLD') {
+            apiStatus = selectedStatus
+            apiStatusCode = statusCode
+        } else if (selectedStatus === 'CUSTOMER_REJECTION' || selectedStatus === 'COMPLETED' || selectedStatus === 'BEYOND THE SCOPE') {
+            apiStatus = selectedStatus
+            apiStatusCode = statusCode
+            apiStage = taskHistory[0].task_stage
+            apiStageCode = stageCode
+        } else if (selectedStatus === 'TRAVEL_START' || selectedStatus === 'TRAVEL_END' || selectedStatus === 'TASK_START' || selectedStatus === 'TASK_END') {
+            apiStatus = 'ACCEPTED_OPEN'
+            apiStatusCode = defApiStatusCode
+            apiStage = selectedStatus
+            apiStageCode = statusCode
+        } else if (selectedStatus === 'HOLD') {
+            apiStatus = selectedStatus
+            apiStatusCode = statusCode
+            apiStage = selectedStatus
+            apiStageCode = statusCode
+        }
+
+        console.log('apiStatus', apiStatus)
+
         // console.log('statusCode', statusCode)
+
+        // task_stage: taskHistory.length === 0 ? '' : selectedStatus,
+        // task_stage_code: taskHistory.length === 0 ? '0' : statusCode,
+
 
         let reqData = [
             {
                 cmpcode: "CPAYS",
                 mode: "ENTRY",
                 task_id: task_id,
-                task_status: selectedStatus,
-                task_status_code: statusCode,
+                task_status: apiStatus,
+                task_status_code: apiStatusCode,
                 task_status_description: statusDescription,
-                task_stage: taskHistory.length === 0 ? '' : selectedStatus,
-                task_stage_code: taskHistory.length === 0 ? '0' : statusCode,
+                task_stage: apiStage,
+                task_stage_code: apiStageCode,
                 task_stage_description: statusDescription,
                 task_scheduledon: task_scheduledon,
                 task_ownder_id: userData && userData.empid,
@@ -302,7 +385,7 @@ const TaskDetails = () => {
                 setShowLoader(false)
             })
         } catch (error) {
-            console.error('Error fetching data:', error);
+            console.error('taskStatusSave:', error);
             setShowLoader(false)
         }
     }
@@ -330,6 +413,8 @@ const TaskDetails = () => {
                 return completed
             case 'BEYOND THE SCOPE':
                 return beyondScope
+            case 'HOLD':
+                return pause
             case '':
                 return TaskOpen
             case '0':
@@ -438,7 +523,7 @@ const TaskDetails = () => {
         }
     }
 
-    console.log('chatData', chatData)
+    // console.log('chatData', chatData)
 
     useEffect(() => {
         if (task_id) {
@@ -715,11 +800,11 @@ const TaskDetails = () => {
     // console.log('userAttendanceFromDet', userAttendance)
 
     console.log('taskData', taskData)
-    // console.log('taskHistory', taskHistory)
+    console.log('taskHistory', taskHistory)
 
     // console.log(allStatusList)
 
-    // console.log('statusArray', statusArray)
+    console.log('statusArray', statusArray)
 
     // console.log(task_id, created_on, task_scheduledon)
     return (
@@ -903,7 +988,8 @@ const TaskDetails = () => {
                     </View>
 
                     {
-                        checkInOutText && checkInOutText === 'CHECKOUT' && showHighTaskCount && showHighTaskCount[0].CNT === 0 &&
+                        // checkInOutText && checkInOutText === 'CHECKOUT' && showHighTaskCount && showHighTaskCount[0].CNT === 0 &&
+                        checkInOutText && checkInOutText === 'CHECKOUT' &&
 
                         <>
                             <View style={{
@@ -934,7 +1020,15 @@ const TaskDetails = () => {
                                                 statusArray.map((status, index) => (
                                                     <TouchableOpacity
                                                         key={index}
-                                                        onPress={() => handleStatusClick(status)}
+                                                        onPress={() => {
+                                                            if (isActiveTask) {
+                                                                console.log('insideATTouch')
+                                                                handleStatusClick(status);
+                                                            } else {
+                                                                setOpenTaskInactiveWarn(true)
+                                                                console.log('insideIACT')
+                                                            }
+                                                        }}
                                                         style={{
                                                             backgroundColor: selectedStatus === status ? '#0D6EFD' : '#F1F1F1',
                                                             padding: 8,
@@ -948,7 +1042,7 @@ const TaskDetails = () => {
                                                             height: "auto"
                                                         }}
                                                     >
-                                                        <Image style={status === 'COMPLETED' ? { width: 40, height: 40 } : null} source={getImageForStatus(status)}></Image>
+                                                        <Image style={(status === 'COMPLETED' || status === 'HOLD') ? { width: 40, height: 40 } : null} source={getImageForStatus(status)}></Image>
                                                         <Text style={{ color: selectedStatus === status ? 'white' : 'black' }}>{status}</Text>
                                                     </TouchableOpacity>
                                                 ))
@@ -1122,7 +1216,7 @@ const TaskDetails = () => {
                         </View>
                     }
 
-                    {
+                    {/* {
                         showHighTaskCount && showHighTaskCount[0]?.CNT !== 0 &&
                         <View style={{
                             margin: 8
@@ -1132,7 +1226,7 @@ const TaskDetails = () => {
                                 fontWeight: 'bold'
                             }}>Please complete previous tasks</Text>
                         </View>
-                    }
+                    } */}
 
 
                     <View style={{
@@ -1192,7 +1286,7 @@ const TaskDetails = () => {
                                                 left: -42,
                                                 top: 20
                                             }}>
-                                                <Image source={getImageForStatus(history.task_status)}></Image>
+                                                <Image style={(history.task_stage === 'COMPLETED' || history.task_stage === 'HOLD') ? { width: 40, height: 40 } : null} source={getImageForStatus(history.task_stage)}></Image>
                                             </View>
                                             <View style={{
                                                 marginLeft: 10,
@@ -1215,7 +1309,7 @@ const TaskDetails = () => {
                                                     margin: 4,
                                                     marginLeft: 25,
                                                 }}>
-                                                    <Text style={{ color: 'black', fontSize: 16 }}>{history.task_status}</Text>
+                                                    <Text style={{ color: 'black', fontSize: 16 }}>{history.task_stage}</Text>
                                                     <Text style={{ color: 'black', marginTop: 4 }}>{history.task_status_description}</Text>
                                                 </View>
                                             </View>
@@ -1511,6 +1605,20 @@ const TaskDetails = () => {
                         </View>
                         {/* <Button title="OpenChat" onPress={() => setNewTaskModal(!newTaskModal)} /> */}
                         <Button title="OpenChat" onPress={() => navigateToNewTask()} />
+                    </View>
+                </View>
+            }
+
+            {
+                openTaskInactiveWarn &&
+                <View style={styles.mapmodalContainer}>
+                    <View style={styles.mapmodalContent}>
+                        <Text style={{ fontWeight: 'bold', fontSize: 16 }}>Please complete or hold the current active Task</Text>
+                        <View style={{ marginTop: 12, width: '100%', justifyContent: 'center', alignItems: 'center' }}>
+                            <TouchableOpacity onPress={() => setOpenTaskInactiveWarn(false)} style={{ backgroundColor: 'red', paddingHorizontal: 24, paddingVertical: 8, borderRadius: 4 }}>
+                                <Text style={{ color: 'white' }}>Close</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
             }

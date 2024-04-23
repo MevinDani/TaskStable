@@ -66,7 +66,7 @@ const DoughnutChart = () => {
                     selectedEmployee.TOTAL_ASSIGNED,
                     selectedEmployee.PENDING,
                     selectedEmployee.ACCEPTED_OPEN,
-                    selectedEmployee.ACCDEPTED_HOLD,
+                    selectedEmployee.ACCEPTED_HOLD,
                     selectedEmployee.TRAVEL,
                     selectedEmployee.ESCALATED,
                     selectedEmployee.TASK_PROCESS,
@@ -88,7 +88,7 @@ const DoughnutChart = () => {
         }
     }, [empId])
 
-    // console.log(userData, 'userData')
+    console.log(userData, 'userData')
     console.log('taskCount', taskCount)
     return (
         <View style={{
