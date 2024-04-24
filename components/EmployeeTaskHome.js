@@ -799,8 +799,10 @@ const EmployeeTaskHome = () => {
                 // adding location to the realtime db
                 const userLocationRef = database().ref('userLocations').child(empId);
                 userLocationRef.set({
-                    latitude: mapRegion.latitude.toString(),
-                    longitude: mapRegion.longitude.toString(),
+                    latitude: mapRegion.latitude,
+                    longitude: mapRegion.longitude,
+                    longitudeDelta: mapRegion.longitudeDelta,
+                    latitudeDelta: mapRegion.latitudeDelta,
                     fcmToken
                 });
             }
@@ -1508,8 +1510,12 @@ const EmployeeTaskHome = () => {
                                 justifyContent: 'space-between',
                                 width: '100%'
                             }}>
-                                <Text style={{ padding: 8, margin: 2, backgroundColor: 'green', color: 'white' }}>Latitude: {mapRegion.latitude}</Text>
-                                <Text style={{ padding: 8, margin: 2, backgroundColor: 'green', color: 'white' }}>Longitude: {mapRegion.longitude}</Text>
+                                {/* <Text style={{ padding: 8, margin: 2, backgroundColor: 'green', color: 'white' }}>Latitude: {mapRegion.latitude}</Text>
+                                <Text style={{ padding: 8, margin: 2, backgroundColor: 'green', color: 'white' }}>Longitude: {mapRegion.longitude}</Text> */}
+
+                                <Text style={{ padding: 8, margin: 2, backgroundColor: 'green', color: 'white' }}>Latitude: {mapRegion.latitude.toFixed(2)}</Text>
+                                <Text style={{ padding: 8, margin: 2, backgroundColor: 'green', color: 'white' }}>Longitude: {mapRegion.longitude.toFixed(2)}</Text>
+
                             </View>
                             <View style={{
                                 flexDirection: 'row',
