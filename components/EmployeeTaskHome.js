@@ -1049,10 +1049,17 @@ const EmployeeTaskHome = () => {
                                     </View>
                                 }
 
+                                {
+                                    taskList && taskList.length === 0 &&
+                                    <View>
+                                        <Text style={{ color: 'red', fontWeight: 'bold' }}>No data available</Text>
+                                    </View>
+                                }
+
                                 <ScrollView vertical={true} nestedScrollEnabled={true}>
                                     {/* Table Data */}
                                     {
-                                        taskList && taskList !== 'apiError' && taskList?.map((task, index) => (
+                                        taskList && taskList !== 'apiError' && taskList.length !== 0 && taskList?.map((task, index) => (
                                             <TouchableOpacity style={styles.tableRow} key={index} onPress={() => gotoTaskDetail(task)}>
                                                 <Text style={styles.dataCell}>{task.task_name}</Text>
                                                 <Text style={styles.dataCell}>{task.task_description}</Text>

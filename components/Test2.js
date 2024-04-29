@@ -62,6 +62,12 @@ const DoughnutChart = () => {
             const response = await axios.get(`https://cubixweberp.com:156/api/CRMTaskCount/CPAYS/creator/${empId}/-/1900-01-01/1900-01-01`)
 
             console.log(response.data, 'fetchTaskCount')
+
+            if (response.data.length === 0) {
+                setTaskCount([])
+                return
+            }
+
             const selectedEmployee = response?.data.find(employee => employee.EMPID === empId);
             if (selectedEmployee) {
                 // Align the data according to the desired order
@@ -143,7 +149,14 @@ const DoughnutChart = () => {
                 }
 
                 {
-                    taskCount && taskCount !== 'apiError' &&
+                    taskCount.length === 0 &&
+                    <View>
+                        <Text style={{ color: 'red', fontWeight: 'bold' }}>No Data available</Text>
+                    </View>
+                }
+
+                {
+                    taskCount && taskCount !== 'apiError' && taskCount.length !== 0 &&
                     <Doughnut
                         data={taskCount}
                         counts={taskCount}
