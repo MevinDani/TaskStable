@@ -58,7 +58,10 @@ const DoughnutChart = () => {
 
     const fetchTaskCount = async () => {
         try {
+
             const response = await axios.get(`https://cubixweberp.com:156/api/CRMTaskCount/CPAYS/creator/${empId}/-/1900-01-01/1900-01-01`)
+
+            console.log(response.data, 'fetchTaskCount')
             const selectedEmployee = response?.data.find(employee => employee.EMPID === empId);
             if (selectedEmployee) {
                 // Align the data according to the desired order
@@ -78,7 +81,9 @@ const DoughnutChart = () => {
                 console.error('Employee not found');
             }
         } catch (error) {
-            console.error('Error fetching user data:', error);
+            console.error('fetchTaskCountError:', error);
+            setTaskCount('apiError')
+            // console.log(`https://cubixweberp.com:156/api/CRMTaskCount/CPAYS/creator/${empId}/-/1900-01-01/1900-01-01`)
         }
     }
 
@@ -131,7 +136,14 @@ const DoughnutChart = () => {
                 }
 
                 {
-                    taskCount &&
+                    taskCount === 'apiError' &&
+                    <View>
+                        <Text style={{ color: 'red', fontWeight: 'bold' }}>some error in the backend, please wait...</Text>
+                    </View>
+                }
+
+                {
+                    taskCount && taskCount !== 'apiError' &&
                     <Doughnut
                         data={taskCount}
                         counts={taskCount}

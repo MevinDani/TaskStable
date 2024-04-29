@@ -18,6 +18,8 @@ import DoughnutChart from './Test2';
 import Loader from './Loader';
 import messaging from '@react-native-firebase/messaging';
 import database from '@react-native-firebase/database';
+import mapMan from '../images/mapMan.png'
+
 
 
 
@@ -183,6 +185,7 @@ const EmployeeTaskHome = () => {
             console.log('fetchData')
         } catch (error) {
             console.log(error, 'getTaskListErrorfetchData')
+            setTaskList('apiError')
         }
     };
 
@@ -195,7 +198,9 @@ const EmployeeTaskHome = () => {
             setShowTaskAddToast(true)
             console.log('fetchDataNew')
         } catch (error) {
-            console.log(error, 'getTaskListError')
+            console.log(error, 'getTaskListErrorfetchDataNew')
+            setTaskList('apiError')
+
         }
     };
 
@@ -204,7 +209,7 @@ const EmployeeTaskHome = () => {
             const response = await axios.get(`https://cubixweberp.com:156/api/CRMAttendanceList/CPAYS/${empId}`);
             setUserAttendance(response.data);
         } catch (error) {
-            console.log(error, 'getTaskListError')
+            console.log(error, 'fetchUserAttendanceError')
         }
     }
 
@@ -913,7 +918,7 @@ const EmployeeTaskHome = () => {
     // console.log('mapRegion', mapRegion)
 
 
-    // console.log('taskList', taskList)
+    console.log('taskList', taskList)
     // console.log(date, 'date')
     // console.log(time, 'time')
 
@@ -1037,10 +1042,17 @@ const EmployeeTaskHome = () => {
                                     <ActivityIndicator color='blue' size='large'></ActivityIndicator>
                                 }
 
+                                {
+                                    taskList === 'apiError' &&
+                                    <View>
+                                        <Text style={{ color: 'red', fontWeight: 'bold' }}>some error in the backend, please wait...</Text>
+                                    </View>
+                                }
+
                                 <ScrollView vertical={true} nestedScrollEnabled={true}>
                                     {/* Table Data */}
                                     {
-                                        taskList && taskList?.map((task, index) => (
+                                        taskList && taskList !== 'apiError' && taskList?.map((task, index) => (
                                             <TouchableOpacity style={styles.tableRow} key={index} onPress={() => gotoTaskDetail(task)}>
                                                 <Text style={styles.dataCell}>{task.task_name}</Text>
                                                 <Text style={styles.dataCell}>{task.task_description}</Text>
@@ -1495,12 +1507,30 @@ const EmployeeTaskHome = () => {
                         <View style={styles.modalContent}>
                             <View style={styles.mapCont}>
                                 {mapRegion.latitude !== 0 && (
-                                    <>
-                                        <MapView style={styles.map} initialRegion={mapRegion} provider={PROVIDER_OSMDROID}>
-                                            <Marker coordinate={mapRegion} />
-                                        </MapView>
-                                        <Text>Test</Text>
-                                    </>
+
+                                    <MapView
+                                        provider={PROVIDER_GOOGLE} // remove if not using Google Maps
+                                        style={styles.map}
+                                        initialRegion={{
+                                            latitude: mapRegion.latitude,
+                                            longitude: mapRegion.longitude,
+                                            latitudeDelta: 0.09,
+                                            longitudeDelta: 0.03,
+                                        }}
+                                    >
+                                        <Marker coordinate={{ latitude: mapRegion.latitude, longitude: mapRegion.longitude }}>
+                                            <Image
+                                                source={mapMan}
+                                            // style={{ width: 50, height: 100 }}
+                                            />
+                                        </Marker>
+                                    </MapView>
+                                    // <>
+                                    //     <MapView style={styles.map} initialRegion={mapRegion} provider={PROVIDER_GOOGLE}>
+                                    //         <Marker coordinate={mapRegion} />
+                                    //     </MapView>
+                                    //     {/* <Text>Test</Text> */}
+                                    // </>
                                 )}
                             </View>
                             <View style={{
